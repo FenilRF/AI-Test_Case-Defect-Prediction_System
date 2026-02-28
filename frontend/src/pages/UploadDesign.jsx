@@ -10,6 +10,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
+import useSessionState from "../hooks/useSessionState";
 import {
     FiUploadCloud, FiFile, FiImage, FiLink, FiX, FiCheckCircle,
     FiAlertTriangle, FiCpu, FiLayers, FiGrid,
@@ -27,7 +28,7 @@ export default function UploadDesign() {
     const [requirementId, setRequirementId] = useState("");
     const [requirements, setRequirements] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState(null);
+    const [result, setResult] = useSessionState("upload_design_result", null);
     const [error, setError] = useState("");
 
     const fileInputRef = useRef(null);

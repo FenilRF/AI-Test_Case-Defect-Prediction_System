@@ -8,6 +8,7 @@
  */
 
 import { useState } from "react";
+import useSessionState from "../hooks/useSessionState";
 import {
     FiSend, FiCpu, FiCheckCircle, FiFileText, FiAlertTriangle,
     FiSave, FiZap, FiTarget, FiLayers, FiShield,
@@ -15,15 +16,15 @@ import {
 import { generateTestCases, generateEnterprise, exportTestCasesExcel } from "../services/api";
 
 export default function UploadRequirement() {
-    const [text, setText] = useState("");
-    const [designText, setDesignText] = useState("");
+    const [text, setText] = useSessionState("upload_req_text", "");
+    const [designText, setDesignText] = useSessionState("upload_req_designText", "");
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState(null);
+    const [result, setResult] = useSessionState("upload_req_result", null);
     const [error, setError] = useState("");
     const [excelSaving, setExcelSaving] = useState(false);
     const [excelMessage, setExcelMessage] = useState("");
     const [excelFileName, setExcelFileName] = useState("TC_Export");
-    const [enterpriseMode, setEnterpriseMode] = useState(false);
+    const [enterpriseMode, setEnterpriseMode] = useSessionState("upload_req_enterprise", false);
 
     const handleGenerate = async () => {
         if (text.trim().length < 5) {
