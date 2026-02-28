@@ -46,3 +46,8 @@ coverage.xml
 
 # Project Specific
 test_cases/
+datasets/
+backend/test_cases/
+backend/app_database.db
+backend/test_database.db
+*.db
