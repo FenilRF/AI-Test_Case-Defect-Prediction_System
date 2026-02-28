@@ -1,0 +1,26 @@
+[
+    {
+        "text": "The system shall allow users to login using their email and password. The email must be in a valid format and the password is required with a minimum length of 8 characters."
+    },
+    {
+        "text": "Users should be able to register by providing their name, email, phone number, and password. All fields are required. Email must be unique and password must contain at least one uppercase letter and one special character."
+    },
+    {
+        "text": "The payment module should allow users to transfer an amount from their account. The amount must be positive and not exceed the current balance. The transaction id should be auto-generated."
+    },
+    {
+        "text": "The system shall allow administrators to create, update, and delete products. Each product must have a title, description, price, and category. Price must be a positive numeric value."
+    },
+    {
+        "text": "Users should be able to search for products by name, category, or price range. The search results should be sortable and filterable. Each result should display the product title, price, and image."
+    },
+    {
+        "text": "The dashboard should display user profile information including name, email, and phone. Users should be able to update their profile. The email format must be validated."
+    },
+    {
+        "text": "The file upload module should allow users to upload documents and images. File size must not exceed 10MB. Supported formats are PDF, JPG, PNG, and DOCX."
+    },
+    {
+        "text": "The order management system should allow users to view, create, and cancel orders. Each order must have an order id, status, total amount, and delivery date."
+    }
+]

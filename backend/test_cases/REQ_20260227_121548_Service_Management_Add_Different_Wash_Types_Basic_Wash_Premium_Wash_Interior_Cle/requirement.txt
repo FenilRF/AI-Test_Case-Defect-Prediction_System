@@ -1,0 +1,16 @@
+Service Management
+
+Add different wash types:
+
+Basic Wash
+
+Premium Wash
+
+Interior Cleaning
+
+Full Detailing
+
+Admin can set price for each service
+
+Admin can enable/disable service
+

@@ -1,0 +1,7 @@
+Billing System
+
+Generate bill
+
+Add consultation charges
+
+Add medicine charges

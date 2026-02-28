@@ -1,0 +1,7 @@
+Payment System
+
+Cash / Online payment
+
+Generate invoice
+
+Track payment status (Pending / Paid / Failed)

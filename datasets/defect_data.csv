@@ -1,0 +1,51 @@
+module_name,lines_of_code,complexity_score,past_defects,code_churn,defect_label
+Authentication,3500,35,12,180,1
+Login,1200,15,3,50,0
+Registration,1800,22,8,120,1
+Payment,4200,42,18,250,1
+Shopping Cart,2800,28,6,90,0
+Order Management,3200,38,14,200,1
+Product Listing,900,8,1,30,0
+Search,1500,18,4,70,0
+User Profile,1100,12,2,40,0
+Dashboard,2000,25,10,150,1
+Notifications,800,10,1,25,0
+Settings,600,5,0,15,0
+Reports,2500,30,9,140,1
+File Upload,1600,20,7,110,1
+Analytics,2200,26,5,85,0
+API Gateway,3800,40,16,220,1
+Email Service,1400,16,3,60,0
+Cache Layer,1000,14,2,45,0
+Database Manager,2600,32,11,170,1
+Logging Service,700,6,1,20,0
+Admin Panel,3000,34,13,190,1
+Chat Module,2400,27,7,100,0
+Video Streaming,4500,45,20,280,1
+Image Processing,2100,24,6,95,0
+Recommendation Engine,3600,38,15,210,1
+Data Export,1300,13,3,55,0
+Audit Trail,1700,19,5,80,0
+Security Module,3900,41,17,230,1
+Billing,2900,33,12,175,1
+Inventory,2300,23,4,65,0
+Shipping,1900,21,8,130,1
+Coupon System,1000,11,2,35,0
+Wishlist,800,7,1,22,0
+Review System,1500,17,5,90,1
+Social Login,1100,13,3,50,0
+Two Factor Auth,2000,28,9,145,1
+Password Reset,900,9,2,30,0
+User Roles,1600,20,6,100,1
+Subscription,2700,31,11,165,1
+Webhook Handler,1400,15,4,75,0
+Rate Limiter,800,10,1,28,0
+Content Management,3100,36,14,195,1
+Media Library,2500,29,8,115,0
+Workflow Engine,3400,37,13,185,1
+Template Engine,1200,12,2,42,0
+Scheduler,1800,22,7,105,1
+Migration Tool,1000,11,1,32,0
+Backup Service,1500,18,5,88,0
+Monitoring,2100,25,9,140,1
+Load Balancer,2800,34,12,180,1

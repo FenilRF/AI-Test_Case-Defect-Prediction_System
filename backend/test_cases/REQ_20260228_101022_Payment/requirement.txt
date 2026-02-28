@@ -1,0 +1,6 @@
+We run a car washing business with 2 branches and 6 staff members.
+Currently, bookings and billing are handled manually, which causes:
+Double bookings
+Payment tracking issues
+Service delays
+No proper revenue tracking

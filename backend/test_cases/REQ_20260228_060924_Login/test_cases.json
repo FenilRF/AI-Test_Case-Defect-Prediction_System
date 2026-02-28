@@ -1,0 +1,137 @@
+[
+  {
+    "test_id": 298,
+    "module_name": "Login",
+    "scenario": "Verify that login succeeds with valid data",
+    "test_type": "positive",
+    "test_level": "Unit",
+    "expected_result": "Login operation completes successfully with valid data",
+    "priority": "P2"
+  },
+  {
+    "test_id": 299,
+    "module_name": "Login",
+    "scenario": "Verify login operation with all valid inputs",
+    "test_type": "positive",
+    "test_level": "UAT",
+    "expected_result": "Login completes and returns success response",
+    "priority": "P2"
+  },
+  {
+    "test_id": 300,
+    "module_name": "Login",
+    "scenario": "Verify error when data is missing",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System returns validation error indicating data is required",
+    "priority": "P1"
+  },
+  {
+    "test_id": 301,
+    "module_name": "Login",
+    "scenario": "Verify error when data is empty",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects empty data with appropriate error message",
+    "priority": "P1"
+  },
+  {
+    "test_id": 302,
+    "module_name": "Login",
+    "scenario": "Verify error when data has invalid format",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects invalid data format and shows format hint",
+    "priority": "P1"
+  },
+  {
+    "test_id": 303,
+    "module_name": "Login",
+    "scenario": "Verify data at minimum allowed length (1 character)",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts data at minimum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 304,
+    "module_name": "Login",
+    "scenario": "Verify data at maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts data at maximum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 305,
+    "module_name": "Login",
+    "scenario": "Verify data exceeding maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System rejects data exceeding maximum length with error",
+    "priority": "P2"
+  },
+  {
+    "test_id": 306,
+    "module_name": "Login",
+    "scenario": "Verify data with only whitespace characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System trims whitespace and validates data correctly",
+    "priority": "P3"
+  },
+  {
+    "test_id": 307,
+    "module_name": "Login",
+    "scenario": "Verify data with Unicode / special characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles Unicode in data without crashing",
+    "priority": "P3"
+  },
+  {
+    "test_id": 308,
+    "module_name": "Login",
+    "scenario": "Verify duplicate login request handling (idempotency)",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles duplicate login gracefully without data corruption",
+    "priority": "P3"
+  },
+  {
+    "test_id": 309,
+    "module_name": "Login",
+    "scenario": "Verify login under concurrent access",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System maintains data integrity during concurrent login operations",
+    "priority": "P3"
+  },
+  {
+    "test_id": 310,
+    "module_name": "Login",
+    "scenario": "Verify SQL injection attempt in data \u2014 input: ' OR '1'='1",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises input and rejects SQL injection in data",
+    "priority": "P1"
+  },
+  {
+    "test_id": 311,
+    "module_name": "Login",
+    "scenario": "Verify XSS attempt in data \u2014 input: <script>alert('xss')</script>",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises HTML/JS and prevents XSS via data",
+    "priority": "P1"
+  },
+  {
+    "test_id": 312,
+    "module_name": "Login",
+    "scenario": "Verify login is not accessible without authentication",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System returns 401/403 for unauthenticated login attempt",
+    "priority": "P1"
+  }
+]

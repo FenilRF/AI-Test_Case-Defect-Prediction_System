@@ -1,0 +1,9 @@
+Booking System
+
+Customer can:
+
+Select service
+
+Choose date & time slot
+
+Add vehicle details

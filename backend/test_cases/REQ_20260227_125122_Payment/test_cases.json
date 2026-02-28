@@ -1,0 +1,137 @@
+[
+  {
+    "test_id": 209,
+    "module_name": "Payment",
+    "scenario": "Verify that process succeeds with valid status",
+    "test_type": "positive",
+    "test_level": "Unit",
+    "expected_result": "Process operation completes successfully with valid status",
+    "priority": "P2"
+  },
+  {
+    "test_id": 210,
+    "module_name": "Payment",
+    "scenario": "Verify process operation with all valid inputs",
+    "test_type": "positive",
+    "test_level": "UAT",
+    "expected_result": "Process completes and returns success response",
+    "priority": "P2"
+  },
+  {
+    "test_id": 211,
+    "module_name": "Payment",
+    "scenario": "Verify error when status is missing",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System returns validation error indicating status is required",
+    "priority": "P1"
+  },
+  {
+    "test_id": 212,
+    "module_name": "Payment",
+    "scenario": "Verify error when status is empty",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects empty status with appropriate error message",
+    "priority": "P1"
+  },
+  {
+    "test_id": 213,
+    "module_name": "Payment",
+    "scenario": "Verify error when status has invalid format",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects invalid status format and shows format hint",
+    "priority": "P1"
+  },
+  {
+    "test_id": 214,
+    "module_name": "Payment",
+    "scenario": "Verify status at minimum allowed length (1 character)",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts status at minimum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 215,
+    "module_name": "Payment",
+    "scenario": "Verify status at maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts status at maximum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 216,
+    "module_name": "Payment",
+    "scenario": "Verify status exceeding maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System rejects status exceeding maximum length with error",
+    "priority": "P2"
+  },
+  {
+    "test_id": 217,
+    "module_name": "Payment",
+    "scenario": "Verify status with only whitespace characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System trims whitespace and validates status correctly",
+    "priority": "P3"
+  },
+  {
+    "test_id": 218,
+    "module_name": "Payment",
+    "scenario": "Verify status with Unicode / special characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles Unicode in status without crashing",
+    "priority": "P3"
+  },
+  {
+    "test_id": 219,
+    "module_name": "Payment",
+    "scenario": "Verify duplicate process request handling (idempotency)",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles duplicate process gracefully without data corruption",
+    "priority": "P3"
+  },
+  {
+    "test_id": 220,
+    "module_name": "Payment",
+    "scenario": "Verify process under concurrent access",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System maintains data integrity during concurrent process operations",
+    "priority": "P3"
+  },
+  {
+    "test_id": 221,
+    "module_name": "Payment",
+    "scenario": "Verify SQL injection attempt in status \u2014 input: ' OR '1'='1",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises input and rejects SQL injection in status",
+    "priority": "P1"
+  },
+  {
+    "test_id": 222,
+    "module_name": "Payment",
+    "scenario": "Verify XSS attempt in status \u2014 input: <script>alert('xss')</script>",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises HTML/JS and prevents XSS via status",
+    "priority": "P1"
+  },
+  {
+    "test_id": 223,
+    "module_name": "Payment",
+    "scenario": "Verify process is not accessible without authentication",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System returns 401/403 for unauthenticated process attempt",
+    "priority": "P1"
+  }
+]

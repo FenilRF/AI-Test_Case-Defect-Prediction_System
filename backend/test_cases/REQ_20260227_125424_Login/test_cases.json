@@ -1,0 +1,398 @@
+[
+  {
+    "test_id": 224,
+    "module_name": "Login",
+    "scenario": "Verify that login succeeds with valid name",
+    "test_type": "positive",
+    "test_level": "Unit",
+    "expected_result": "Login operation completes successfully with valid name",
+    "priority": "P2"
+  },
+  {
+    "test_id": 225,
+    "module_name": "Login",
+    "scenario": "Verify that login succeeds with valid phone",
+    "test_type": "positive",
+    "test_level": "Unit",
+    "expected_result": "Login operation completes successfully with valid phone",
+    "priority": "P2"
+  },
+  {
+    "test_id": 226,
+    "module_name": "Login",
+    "scenario": "Verify that login succeeds with valid role",
+    "test_type": "positive",
+    "test_level": "System",
+    "expected_result": "Login operation completes successfully with valid role",
+    "priority": "P2"
+  },
+  {
+    "test_id": 227,
+    "module_name": "Login",
+    "scenario": "Verify login operation with all valid inputs",
+    "test_type": "positive",
+    "test_level": "UAT",
+    "expected_result": "Login completes and returns success response",
+    "priority": "P2"
+  },
+  {
+    "test_id": 228,
+    "module_name": "Login",
+    "scenario": "Verify that logout succeeds with valid name",
+    "test_type": "positive",
+    "test_level": "Unit",
+    "expected_result": "Logout operation completes successfully with valid name",
+    "priority": "P2"
+  },
+  {
+    "test_id": 229,
+    "module_name": "Login",
+    "scenario": "Verify that logout succeeds with valid phone",
+    "test_type": "positive",
+    "test_level": "Unit",
+    "expected_result": "Logout operation completes successfully with valid phone",
+    "priority": "P2"
+  },
+  {
+    "test_id": 230,
+    "module_name": "Login",
+    "scenario": "Verify that logout succeeds with valid role",
+    "test_type": "positive",
+    "test_level": "System",
+    "expected_result": "Logout operation completes successfully with valid role",
+    "priority": "P2"
+  },
+  {
+    "test_id": 231,
+    "module_name": "Login",
+    "scenario": "Verify logout operation with all valid inputs",
+    "test_type": "positive",
+    "test_level": "UAT",
+    "expected_result": "Logout completes and returns success response",
+    "priority": "P2"
+  },
+  {
+    "test_id": 232,
+    "module_name": "Login",
+    "scenario": "Verify error when name is missing",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System returns validation error indicating name is required",
+    "priority": "P1"
+  },
+  {
+    "test_id": 233,
+    "module_name": "Login",
+    "scenario": "Verify error when name is empty",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects empty name with appropriate error message",
+    "priority": "P1"
+  },
+  {
+    "test_id": 234,
+    "module_name": "Login",
+    "scenario": "Verify error when name has invalid format",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects invalid name format and shows format hint",
+    "priority": "P1"
+  },
+  {
+    "test_id": 235,
+    "module_name": "Login",
+    "scenario": "Verify error when phone is missing",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System returns validation error indicating phone is required",
+    "priority": "P1"
+  },
+  {
+    "test_id": 236,
+    "module_name": "Login",
+    "scenario": "Verify error when phone is empty",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects empty phone with appropriate error message",
+    "priority": "P1"
+  },
+  {
+    "test_id": 237,
+    "module_name": "Login",
+    "scenario": "Verify error when phone has invalid format",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects invalid phone format and shows format hint",
+    "priority": "P1"
+  },
+  {
+    "test_id": 238,
+    "module_name": "Login",
+    "scenario": "Verify error when role is missing",
+    "test_type": "negative",
+    "test_level": "System",
+    "expected_result": "System returns validation error indicating role is required",
+    "priority": "P1"
+  },
+  {
+    "test_id": 239,
+    "module_name": "Login",
+    "scenario": "Verify error when role is empty",
+    "test_type": "negative",
+    "test_level": "System",
+    "expected_result": "System rejects empty role with appropriate error message",
+    "priority": "P1"
+  },
+  {
+    "test_id": 240,
+    "module_name": "Login",
+    "scenario": "Verify error when role has invalid format",
+    "test_type": "negative",
+    "test_level": "System",
+    "expected_result": "System rejects invalid role format and shows format hint",
+    "priority": "P1"
+  },
+  {
+    "test_id": 241,
+    "module_name": "Login",
+    "scenario": "Verify name at minimum allowed length (1 character)",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts name at minimum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 242,
+    "module_name": "Login",
+    "scenario": "Verify name at maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts name at maximum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 243,
+    "module_name": "Login",
+    "scenario": "Verify name exceeding maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System rejects name exceeding maximum length with error",
+    "priority": "P2"
+  },
+  {
+    "test_id": 244,
+    "module_name": "Login",
+    "scenario": "Verify phone at minimum allowed length (1 character)",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts phone at minimum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 245,
+    "module_name": "Login",
+    "scenario": "Verify phone at maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts phone at maximum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 246,
+    "module_name": "Login",
+    "scenario": "Verify phone exceeding maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System rejects phone exceeding maximum length with error",
+    "priority": "P2"
+  },
+  {
+    "test_id": 247,
+    "module_name": "Login",
+    "scenario": "Verify role at minimum allowed length (1 character)",
+    "test_type": "boundary",
+    "test_level": "System",
+    "expected_result": "System accepts role at minimum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 248,
+    "module_name": "Login",
+    "scenario": "Verify role at maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "System",
+    "expected_result": "System accepts role at maximum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 249,
+    "module_name": "Login",
+    "scenario": "Verify role exceeding maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "System",
+    "expected_result": "System rejects role exceeding maximum length with error",
+    "priority": "P2"
+  },
+  {
+    "test_id": 250,
+    "module_name": "Login",
+    "scenario": "Verify name with only whitespace characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System trims whitespace and validates name correctly",
+    "priority": "P3"
+  },
+  {
+    "test_id": 251,
+    "module_name": "Login",
+    "scenario": "Verify name with Unicode / special characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles Unicode in name without crashing",
+    "priority": "P3"
+  },
+  {
+    "test_id": 252,
+    "module_name": "Login",
+    "scenario": "Verify phone with only whitespace characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System trims whitespace and validates phone correctly",
+    "priority": "P3"
+  },
+  {
+    "test_id": 253,
+    "module_name": "Login",
+    "scenario": "Verify phone with Unicode / special characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles Unicode in phone without crashing",
+    "priority": "P3"
+  },
+  {
+    "test_id": 254,
+    "module_name": "Login",
+    "scenario": "Verify role with only whitespace characters",
+    "test_type": "edge",
+    "test_level": "System",
+    "expected_result": "System trims whitespace and validates role correctly",
+    "priority": "P3"
+  },
+  {
+    "test_id": 255,
+    "module_name": "Login",
+    "scenario": "Verify role with Unicode / special characters",
+    "test_type": "edge",
+    "test_level": "System",
+    "expected_result": "System handles Unicode in role without crashing",
+    "priority": "P3"
+  },
+  {
+    "test_id": 256,
+    "module_name": "Login",
+    "scenario": "Verify duplicate login request handling (idempotency)",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles duplicate login gracefully without data corruption",
+    "priority": "P3"
+  },
+  {
+    "test_id": 257,
+    "module_name": "Login",
+    "scenario": "Verify login under concurrent access",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System maintains data integrity during concurrent login operations",
+    "priority": "P3"
+  },
+  {
+    "test_id": 258,
+    "module_name": "Login",
+    "scenario": "Verify duplicate logout request handling (idempotency)",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles duplicate logout gracefully without data corruption",
+    "priority": "P3"
+  },
+  {
+    "test_id": 259,
+    "module_name": "Login",
+    "scenario": "Verify logout under concurrent access",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System maintains data integrity during concurrent logout operations",
+    "priority": "P3"
+  },
+  {
+    "test_id": 260,
+    "module_name": "Login",
+    "scenario": "Verify SQL injection attempt in name \u2014 input: ' OR '1'='1",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises input and rejects SQL injection in name",
+    "priority": "P1"
+  },
+  {
+    "test_id": 261,
+    "module_name": "Login",
+    "scenario": "Verify XSS attempt in name \u2014 input: <script>alert('xss')</script>",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises HTML/JS and prevents XSS via name",
+    "priority": "P1"
+  },
+  {
+    "test_id": 262,
+    "module_name": "Login",
+    "scenario": "Verify SQL injection attempt in phone \u2014 input: ' OR '1'='1",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises input and rejects SQL injection in phone",
+    "priority": "P1"
+  },
+  {
+    "test_id": 263,
+    "module_name": "Login",
+    "scenario": "Verify XSS attempt in phone \u2014 input: <script>alert('xss')</script>",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises HTML/JS and prevents XSS via phone",
+    "priority": "P1"
+  },
+  {
+    "test_id": 264,
+    "module_name": "Login",
+    "scenario": "Verify SQL injection attempt in role \u2014 input: ' OR '1'='1",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises input and rejects SQL injection in role",
+    "priority": "P1"
+  },
+  {
+    "test_id": 265,
+    "module_name": "Login",
+    "scenario": "Verify XSS attempt in role \u2014 input: <script>alert('xss')</script>",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises HTML/JS and prevents XSS via role",
+    "priority": "P1"
+  },
+  {
+    "test_id": 266,
+    "module_name": "Login",
+    "scenario": "Verify login is not accessible without authentication",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System returns 401/403 for unauthenticated login attempt",
+    "priority": "P1"
+  },
+  {
+    "test_id": 267,
+    "module_name": "Login",
+    "scenario": "Verify logout is not accessible without authentication",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System returns 401/403 for unauthenticated logout attempt",
+    "priority": "P1"
+  }
+]

@@ -1,0 +1,137 @@
+[
+  {
+    "test_id": 63,
+    "module_name": "File Management",
+    "scenario": "Verify that process succeeds with valid file",
+    "test_type": "positive",
+    "test_level": "Unit",
+    "expected_result": "Process operation completes successfully with valid file",
+    "priority": "P2"
+  },
+  {
+    "test_id": 64,
+    "module_name": "File Management",
+    "scenario": "Verify process operation with all valid inputs",
+    "test_type": "positive",
+    "test_level": "UAT",
+    "expected_result": "Process completes and returns success response",
+    "priority": "P2"
+  },
+  {
+    "test_id": 65,
+    "module_name": "File Management",
+    "scenario": "Verify error when file is missing",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System returns validation error indicating file is required",
+    "priority": "P1"
+  },
+  {
+    "test_id": 66,
+    "module_name": "File Management",
+    "scenario": "Verify error when file is empty",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects empty file with appropriate error message",
+    "priority": "P1"
+  },
+  {
+    "test_id": 67,
+    "module_name": "File Management",
+    "scenario": "Verify error when file has invalid format",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects invalid file format and shows format hint",
+    "priority": "P1"
+  },
+  {
+    "test_id": 68,
+    "module_name": "File Management",
+    "scenario": "Verify file at minimum allowed length (1 character)",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts file at minimum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 69,
+    "module_name": "File Management",
+    "scenario": "Verify file at maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts file at maximum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 70,
+    "module_name": "File Management",
+    "scenario": "Verify file exceeding maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System rejects file exceeding maximum length with error",
+    "priority": "P2"
+  },
+  {
+    "test_id": 71,
+    "module_name": "File Management",
+    "scenario": "Verify file with only whitespace characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System trims whitespace and validates file correctly",
+    "priority": "P3"
+  },
+  {
+    "test_id": 72,
+    "module_name": "File Management",
+    "scenario": "Verify file with Unicode / special characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles Unicode in file without crashing",
+    "priority": "P3"
+  },
+  {
+    "test_id": 73,
+    "module_name": "File Management",
+    "scenario": "Verify duplicate process request handling (idempotency)",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles duplicate process gracefully without data corruption",
+    "priority": "P3"
+  },
+  {
+    "test_id": 74,
+    "module_name": "File Management",
+    "scenario": "Verify process under concurrent access",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System maintains data integrity during concurrent process operations",
+    "priority": "P3"
+  },
+  {
+    "test_id": 75,
+    "module_name": "File Management",
+    "scenario": "Verify SQL injection attempt in file \u2014 input: ' OR '1'='1",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises input and rejects SQL injection in file",
+    "priority": "P1"
+  },
+  {
+    "test_id": 76,
+    "module_name": "File Management",
+    "scenario": "Verify XSS attempt in file \u2014 input: <script>alert('xss')</script>",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises HTML/JS and prevents XSS via file",
+    "priority": "P1"
+  },
+  {
+    "test_id": 77,
+    "module_name": "File Management",
+    "scenario": "Verify process is not accessible without authentication",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System returns 401/403 for unauthenticated process attempt",
+    "priority": "P1"
+  }
+]

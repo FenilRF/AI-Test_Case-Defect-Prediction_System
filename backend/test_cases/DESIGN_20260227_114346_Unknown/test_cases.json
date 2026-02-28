@@ -1,0 +1,137 @@
+[
+  {
+    "test_id": 10001,
+    "module_name": "Screenshot",
+    "scenario": "Verify that process succeeds with valid data",
+    "test_type": "positive",
+    "test_level": "Unit",
+    "expected_result": "Process operation completes successfully with valid data",
+    "priority": "P2"
+  },
+  {
+    "test_id": 10002,
+    "module_name": "Screenshot",
+    "scenario": "Verify process operation with all valid inputs",
+    "test_type": "positive",
+    "test_level": "UAT",
+    "expected_result": "Process completes and returns success response",
+    "priority": "P2"
+  },
+  {
+    "test_id": 10003,
+    "module_name": "Screenshot",
+    "scenario": "Verify error when data is missing",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System returns validation error indicating data is required",
+    "priority": "P1"
+  },
+  {
+    "test_id": 10004,
+    "module_name": "Screenshot",
+    "scenario": "Verify error when data is empty",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects empty data with appropriate error message",
+    "priority": "P1"
+  },
+  {
+    "test_id": 10005,
+    "module_name": "Screenshot",
+    "scenario": "Verify error when data has invalid format",
+    "test_type": "negative",
+    "test_level": "Unit",
+    "expected_result": "System rejects invalid data format and shows format hint",
+    "priority": "P1"
+  },
+  {
+    "test_id": 10006,
+    "module_name": "Screenshot",
+    "scenario": "Verify data at minimum allowed length (1 character)",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts data at minimum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 10007,
+    "module_name": "Screenshot",
+    "scenario": "Verify data at maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System accepts data at maximum boundary",
+    "priority": "P2"
+  },
+  {
+    "test_id": 10008,
+    "module_name": "Screenshot",
+    "scenario": "Verify data exceeding maximum allowed length",
+    "test_type": "boundary",
+    "test_level": "Unit",
+    "expected_result": "System rejects data exceeding maximum length with error",
+    "priority": "P2"
+  },
+  {
+    "test_id": 10009,
+    "module_name": "Screenshot",
+    "scenario": "Verify data with only whitespace characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System trims whitespace and validates data correctly",
+    "priority": "P3"
+  },
+  {
+    "test_id": 10010,
+    "module_name": "Screenshot",
+    "scenario": "Verify data with Unicode / special characters",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles Unicode in data without crashing",
+    "priority": "P3"
+  },
+  {
+    "test_id": 10011,
+    "module_name": "Screenshot",
+    "scenario": "Verify duplicate process request handling (idempotency)",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System handles duplicate process gracefully without data corruption",
+    "priority": "P3"
+  },
+  {
+    "test_id": 10012,
+    "module_name": "Screenshot",
+    "scenario": "Verify process under concurrent access",
+    "test_type": "edge",
+    "test_level": "Integration",
+    "expected_result": "System maintains data integrity during concurrent process operations",
+    "priority": "P3"
+  },
+  {
+    "test_id": 10013,
+    "module_name": "Screenshot",
+    "scenario": "Verify SQL injection attempt in data \u2014 input: ' OR '1'='1",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises input and rejects SQL injection in data",
+    "priority": "P1"
+  },
+  {
+    "test_id": 10014,
+    "module_name": "Screenshot",
+    "scenario": "Verify XSS attempt in data \u2014 input: <script>alert('xss')</script>",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System sanitises HTML/JS and prevents XSS via data",
+    "priority": "P1"
+  },
+  {
+    "test_id": 10015,
+    "module_name": "Screenshot",
+    "scenario": "Verify process is not accessible without authentication",
+    "test_type": "security",
+    "test_level": "System",
+    "expected_result": "System returns 401/403 for unauthenticated process attempt",
+    "priority": "P1"
+  }
+]

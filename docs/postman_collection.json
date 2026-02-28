@@ -1,0 +1,304 @@
+{
+    "info": {
+        "name": "AI TestCase & Defect Prediction System",
+        "description": "Postman collection for all API endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Health Check",
+            "item": [
+                {
+                    "name": "Root Health Check",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/",
+                        "header": []
+                    }
+                },
+                {
+                    "name": "Health Endpoint",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/health",
+                        "header": []
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Requirements",
+            "item": [
+                {
+                    "name": "Create Requirement",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/requirements",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"text\": \"The system shall allow users to login using their email and password. The email must be in a valid format and the password is required with a minimum length of 8 characters.\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "List Requirements",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/requirements?skip=0&limit=100",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "requirements"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                }
+                            ]
+                        },
+                        "header": []
+                    }
+                },
+                {
+                    "name": "Get Requirement by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/requirements/1",
+                        "header": []
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Test Case Generation",
+            "item": [
+                {
+                    "name": "Generate Test Cases",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/generate-testcases",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"requirement_text\": \"The system shall allow users to login using their email and password. The email must be in a valid format and the password is required with a minimum length of 8 characters.\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "List Test Cases",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/test-cases?skip=0&limit=100",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "test-cases"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                }
+                            ]
+                        },
+                        "header": []
+                    }
+                },
+                {
+                    "name": "List Test Cases (Filtered by Type)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/test-cases?test_type=security",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "test-cases"
+                            ],
+                            "query": [
+                                {
+                                    "key": "test_type",
+                                    "value": "security"
+                                }
+                            ]
+                        },
+                        "header": []
+                    }
+                },
+                {
+                    "name": "Export Test Cases CSV",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/test-cases/export/csv",
+                        "header": []
+                    }
+                },
+                {
+                    "name": "Export Test Cases JSON",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/test-cases/export/json",
+                        "header": []
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Defect Prediction",
+            "item": [
+                {
+                    "name": "Predict Defect — High Risk Module",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/predict-defect",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"module_name\": \"Payment\",\n  \"lines_of_code\": 4200,\n  \"complexity_score\": 42.0,\n  \"past_defects\": 18,\n  \"code_churn\": 250\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Predict Defect — Low Risk Module",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/predict-defect",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"module_name\": \"Settings\",\n  \"lines_of_code\": 600,\n  \"complexity_score\": 5.0,\n  \"past_defects\": 0,\n  \"code_churn\": 15\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "List Predictions",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/predictions?skip=0&limit=100",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "predictions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                }
+                            ]
+                        },
+                        "header": []
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "item": [
+                {
+                    "name": "Get Dashboard Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/dashboard/stats",
+                        "header": []
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Defect Data (Training)",
+            "item": [
+                {
+                    "name": "Add Defect Data Record",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/defect-data",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"module_name\": \"New Module\",\n  \"lines_of_code\": 2000,\n  \"complexity_score\": 25.5,\n  \"past_defects\": 8,\n  \"code_churn\": 120\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "List Defect Data",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/defect-data",
+                        "header": []
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Model Management",
+            "item": [
+                {
+                    "name": "Reload ML Model",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/model/reload",
+                        "header": []
+                    }
+                }
+            ]
+        }
+    ]
+}

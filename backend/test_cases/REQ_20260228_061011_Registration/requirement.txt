@@ -1,0 +1,13 @@
+Functional Requirements
+
+Student registration
+
+Course enrollment
+
+Attendance tracking
+
+Exam result management
+
+Fee payment tracking
+
+Admin dashboard

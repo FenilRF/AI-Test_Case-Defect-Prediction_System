@@ -1,0 +1,6 @@
+{
+  "module_name": "Login",
+  "probability": 1.0,
+  "risk_level": "High",
+  "defect_category": "UI Level"
+}

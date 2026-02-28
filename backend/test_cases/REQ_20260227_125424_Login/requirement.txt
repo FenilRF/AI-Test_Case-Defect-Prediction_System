@@ -1,0 +1,7 @@
+User Management
+
+User registration (Name, Phone, Vehicle Number)
+
+Login / Logout
+
+Role-based access (Admin, Staff, Customer)

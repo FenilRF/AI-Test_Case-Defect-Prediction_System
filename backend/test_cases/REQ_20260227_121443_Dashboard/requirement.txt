@@ -1,0 +1,15 @@
+Basic UI Requirements
+
+If you build frontend:
+
+Dashboard (Project Overview)
+
+Upload Requirement Page
+
+Generated Test Case Page
+
+Coverage Report Page
+
+Risk Analysis Page
+
+Execution Tracking Page
