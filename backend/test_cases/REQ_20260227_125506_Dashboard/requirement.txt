@@ -1,9 +1,0 @@
-Reports & Dashboard
-
-Daily revenue report
-
-Monthly revenue report
-
-Number of cars serviced
-
-Most popular service

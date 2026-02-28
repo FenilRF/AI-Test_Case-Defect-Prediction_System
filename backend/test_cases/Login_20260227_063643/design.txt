@@ -1,1 +1,0 @@
-Login module using REST API with JWT authentication. Database integration for user storage. Load balancing for system scalability.

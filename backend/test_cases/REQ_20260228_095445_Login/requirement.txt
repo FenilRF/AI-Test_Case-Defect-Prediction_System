@@ -1,1 +1,0 @@
-Login system with email password. Admin access control.

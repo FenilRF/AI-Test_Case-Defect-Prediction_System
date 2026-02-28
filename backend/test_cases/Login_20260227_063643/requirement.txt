@@ -1,1 +1,0 @@
-The system shall allow users to login using their email and password. The email must be validated with proper format. The API endpoint should handle authentication and display user dashboard. Form validation is required for all input fields. Performance and security testing are needed.
