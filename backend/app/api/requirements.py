@@ -37,11 +37,15 @@ from app.schemas.schemas import (
     DeleteTestCasesResponse,
     SaveExcelResponse,
     RiskAnalysisResponse,
+    GroupedTestCasesResponse,
 )
 from app.services.nlp_service import parse_requirement
 from app.services.test_case_generator import generate_test_cases
 from app.services.defect_prediction_service import classify_risk, risk_to_priority
 from app.services.risk_analysis_service import analyse_risk
+from app.services.requirement_chunker import chunk_requirement, merge_parsed_results
+from app.services.complexity_scorer import score_batch
+from app.services.duplicate_detector import deduplicate_batch
 from app.services.folder_storage_service import (
     create_requirement_folder,
     save_excel_to_folder,
@@ -111,11 +115,17 @@ def generate_testcases(payload: TestCaseGenerationRequest, db: Session = Depends
     db.commit()
     db.refresh(requirement)
 
-    # 2. Parse
-    parsed = parse_requirement(payload.requirement_text)
+    # 2. Chunk + Parse (full-document analysis)
+    chunks = chunk_requirement(payload.requirement_text)
+    parsed_chunks = [parse_requirement(chunk) for chunk in chunks]
+    parsed = merge_parsed_results(parsed_chunks)
 
     # 3. Generate
     raw_cases = generate_test_cases(parsed)
+
+    # 3.5 Score complexity + deduplicate
+    raw_cases = score_batch(raw_cases)
+    raw_cases = deduplicate_batch(raw_cases, threshold=0.85)
 
     # 4. Persist
     db_cases = []
@@ -128,6 +138,9 @@ def generate_testcases(payload: TestCaseGenerationRequest, db: Session = Depends
             test_level=rc.get("test_level", "Unit"),
             expected_result=rc["expected_result"],
             priority=rc["priority"],
+            complexity_score=rc.get("complexity_score", 1),
+            duplicate_score=rc.get("duplicate_score", 0.0),
+            coverage_tag=rc.get("coverage_tag", parsed.module),
         )
         db.add(tc)
         db_cases.append(tc)
@@ -232,7 +245,7 @@ def list_test_cases(
     requirement_id: Optional[int] = None,
     test_type: Optional[str] = None,
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(500, ge=1, le=5000),
     db: Session = Depends(get_db),
 ):
     """List test cases with optional filters."""
@@ -251,9 +264,36 @@ def list_test_cases(
             test_level=tc.test_level or "Unit",
             expected_result=tc.expected_result,
             priority=tc.priority,
+            created_at=tc.created_at,
+            complexity_score=tc.complexity_score or 1,
+            duplicate_score=tc.duplicate_score or 0.0,
+            coverage_tag=tc.coverage_tag or "",
         )
         for tc in cases
     ]
+
+
+@router.get("/test-cases/grouped", response_model=GroupedTestCasesResponse)
+def list_test_cases_grouped(db: Session = Depends(get_db)):
+    """Return test cases grouped by module name."""
+    cases = db.query(TestCase).all()
+    grouped: dict = {}
+    for tc in cases:
+        entry = TestCaseOut(
+            test_id=tc.id,
+            module_name=tc.module_name,
+            scenario=tc.scenario,
+            test_type=tc.test_type,
+            test_level=tc.test_level or "Unit",
+            expected_result=tc.expected_result,
+            priority=tc.priority,
+            created_at=tc.created_at,
+            complexity_score=tc.complexity_score or 1,
+            duplicate_score=tc.duplicate_score or 0.0,
+            coverage_tag=tc.coverage_tag or "",
+        )
+        grouped.setdefault(tc.module_name, []).append(entry)
+    return GroupedTestCasesResponse(modules=grouped, total=len(cases))
 
 
 # ── Test Case Deletion ───────────────────────────────────────
@@ -303,6 +343,38 @@ def clear_test_cases_for_requirement(req_id: int, db: Session = Depends(get_db))
     return DeleteTestCasesResponse(
         deleted_count=deleted,
         message=f"Cleared {deleted} test case(s) for requirement #{req_id}",
+    )
+
+
+@router.delete("/test-cases/clear-all", response_model=DeleteTestCasesResponse)
+def clear_all_test_cases(db: Session = Depends(get_db)):
+    """Permanently delete ALL test cases from the database."""
+    count = db.query(TestCase).count()
+    db.query(TestCase).delete()
+    db.commit()
+    # Verification: confirm DB is empty
+    remaining = db.query(TestCase).count()
+    logger.info("CLEAR ALL: deleted %d, remaining %d", count, remaining)
+    return DeleteTestCasesResponse(
+        deleted_count=count,
+        message=f"All {count} test case(s) permanently deleted. DB verified empty: {remaining == 0}",
+    )
+
+
+@router.delete("/test-cases/clear-module/{module_name}", response_model=DeleteTestCasesResponse)
+def clear_module_test_cases(module_name: str, db: Session = Depends(get_db)):
+    """Delete ALL test cases belonging to a specific module."""
+    from urllib.parse import unquote
+    decoded_name = unquote(module_name)
+    count = db.query(TestCase).filter(TestCase.module_name == decoded_name).count()
+    if count == 0:
+        raise HTTPException(status_code=404, detail=f"No test cases found for module '{decoded_name}'")
+    db.query(TestCase).filter(TestCase.module_name == decoded_name).delete(synchronize_session="fetch")
+    db.commit()
+    logger.info("Cleared %d test cases for module '%s'", count, decoded_name)
+    return DeleteTestCasesResponse(
+        deleted_count=count,
+        message=f"Deleted {count} test case(s) from module '{decoded_name}'",
     )
 
 

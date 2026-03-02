@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { FiDownload, FiFilter, FiList, FiSearch, FiFileText, FiTrash2, FiXCircle, FiAlertTriangle } from "react-icons/fi";
+import { FiDownload, FiFilter, FiList, FiSearch, FiFileText, FiTrash2, FiXCircle, FiAlertTriangle, FiLayers } from "react-icons/fi";
 import {
     getTestCases,
     exportTestCasesCSV,
@@ -15,7 +15,8 @@ import {
     exportTestCasesExcel,
     deleteTestCase,
     deleteSelectedTestCases,
-    clearTestCasesForRequirement,
+    clearAllTestCases,
+    clearModuleTestCases,
 } from "../services/api";
 
 export default function GeneratedTestCases() {
@@ -75,14 +76,27 @@ export default function GeneratedTestCases() {
         setActionLoading(true);
         try {
             if (modal.type === "delete-single") {
+                await deleteTestCase(modal.data);
                 setTestCases(prev => prev.filter(tc => tc.test_id !== modal.data));
                 setSelectedIds(prev => { const next = new Set(prev); next.delete(modal.data); return next; });
             } else if (modal.type === "delete-selected") {
+                await deleteSelectedTestCases([...selectedIds]);
                 setTestCases(prev => prev.filter(tc => !selectedIds.has(tc.test_id)));
                 setSelectedIds(new Set());
             } else if (modal.type === "clear-all") {
+                await clearAllTestCases();
                 setTestCases([]);
                 setSelectedIds(new Set());
+                sessionStorage.removeItem("upload_req_result");
+                sessionStorage.removeItem("upload_design_result");
+            } else if (modal.type === "delete-module") {
+                await clearModuleTestCases(modal.data);
+                setTestCases(prev => prev.filter(tc => tc.module_name !== modal.data));
+                setSelectedIds(prev => {
+                    const next = new Set(prev);
+                    testCases.filter(tc => tc.module_name === modal.data).forEach(tc => next.delete(tc.test_id));
+                    return next;
+                });
             }
             closeModal();
         } catch (err) {
@@ -175,6 +189,8 @@ export default function GeneratedTestCases() {
                 return `Are you sure you want to remove ${selectedIds.size} selected test case(s) from the list?`;
             case "clear-all":
                 return `Are you sure you want to clear all generated test cases?`;
+            case "delete-module":
+                return `Are you sure you want to delete ALL test cases in the "${modal.data}" module? This cannot be undone.`;
             default:
                 return "";
         }
@@ -314,7 +330,7 @@ export default function GeneratedTestCases() {
                 </div>
             )}
 
-            {/* ── Test Cases Table ───────────────────────────── */}
+            {/* ── Test Cases — Module-Grouped Tables ─────────── */}
             {loading ? (
                 <div className="spinner-container">
                     <div className="spinner"></div>
@@ -327,79 +343,131 @@ export default function GeneratedTestCases() {
                         <p>Generate test cases from the Upload Requirement page, or adjust your filters.</p>
                     </div>
                 </div>
-            ) : (
-                <div className="data-table-wrapper animate-in">
-                    <div className="data-table-header">
-                        <h3>Test Cases ({filtered.length})</h3>
-                    </div>
-                    <div style={{ overflowX: "auto" }}>
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th style={{ width: "40px" }}>
-                                        <input
-                                            type="checkbox"
-                                            className="tc-checkbox"
-                                            checked={selectedIds.size === filtered.length && filtered.length > 0}
-                                            onChange={selectAll}
-                                        />
-                                    </th>
-                                    <th>ID</th>
-                                    <th>Module</th>
-                                    <th>Scenario</th>
-                                    <th>Type</th>
-                                    <th>Level</th>
-                                    <th>Expected Result</th>
-                                    <th>Priority</th>
-                                    <th style={{ width: "60px" }}>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filtered.map((tc) => (
-                                    <tr key={tc.test_id} className={selectedIds.has(tc.test_id) ? "row-selected" : ""}>
-                                        <td>
+            ) : (() => {
+                // Group filtered test cases by module
+                const grouped = {};
+                filtered.forEach(tc => {
+                    const mod = tc.module_name || "General";
+                    if (!grouped[mod]) grouped[mod] = [];
+                    grouped[mod].push(tc);
+                });
+                const moduleNames = Object.keys(grouped).sort();
+
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return "—";
+                    const d = new Date(dateStr);
+                    if (isNaN(d.getTime())) return "—";
+                    const day = String(d.getDate()).padStart(2, "0");
+                    const mon = String(d.getMonth() + 1).padStart(2, "0");
+                    const yr = d.getFullYear();
+                    const hr = String(d.getHours()).padStart(2, "0");
+                    const min = String(d.getMinutes()).padStart(2, "0");
+                    return `${day}-${mon}-${yr} ${hr}:${min}`;
+                };
+
+                const renderStars = (score) => {
+                    const s = score || 1;
+                    return "★".repeat(s) + "☆".repeat(5 - s);
+                };
+
+                return moduleNames.map(moduleName => (
+                    <div key={moduleName} className="data-table-wrapper animate-in" style={{ marginBottom: "1.5rem" }}>
+                        <div className="data-table-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <h3 style={{ margin: 0 }}>
+                                <FiLayers style={{ marginRight: 6, verticalAlign: "middle" }} />
+                                {moduleName} Module
+                                <span style={{ fontWeight: 400, fontSize: "0.85rem", marginLeft: 8, opacity: 0.7 }}>
+                                    ({grouped[moduleName].length} cases)
+                                </span>
+                            </h3>
+                            <button
+                                className="btn-danger-outline"
+                                style={{ fontSize: "0.8rem", padding: "0.35rem 0.75rem" }}
+                                onClick={() => openModal("delete-module", moduleName)}
+                                title={`Delete all ${moduleName} test cases`}
+                            >
+                                <FiTrash2 style={{ marginRight: 4 }} /> Delete Module
+                            </button>
+                        </div>
+                        <div style={{ overflowX: "auto" }}>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: "40px" }}>
                                             <input
                                                 type="checkbox"
                                                 className="tc-checkbox"
-                                                checked={selectedIds.has(tc.test_id)}
-                                                onChange={() => toggleSelect(tc.test_id)}
+                                                checked={grouped[moduleName].every(tc => selectedIds.has(tc.test_id))}
+                                                onChange={() => {
+                                                    const ids = grouped[moduleName].map(tc => tc.test_id);
+                                                    const allSelected = ids.every(id => selectedIds.has(id));
+                                                    setSelectedIds(prev => {
+                                                        const next = new Set(prev);
+                                                        ids.forEach(id => allSelected ? next.delete(id) : next.add(id));
+                                                        return next;
+                                                    });
+                                                }}
                                             />
-                                        </td>
-                                        <td>{tc.test_id}</td>
-                                        <td style={{ fontWeight: 500 }}>{tc.module_name}</td>
-                                        <td>{tc.scenario}</td>
-                                        <td>
-                                            <span className={`badge badge-${tc.test_type}`}>
-                                                {tc.test_type}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className={`badge badge-level-${(tc.test_level || "unit").toLowerCase()}`}>
-                                                {tc.test_level || "Unit"}
-                                            </span>
-                                        </td>
-                                        <td>{tc.expected_result}</td>
-                                        <td>
-                                            <span className={`badge badge-${tc.priority.toLowerCase()}`}>
-                                                {tc.priority}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="btn-icon-danger"
-                                                onClick={() => openModal("delete-single", tc.test_id)}
-                                                title="Delete test case"
-                                            >
-                                                <FiTrash2 />
-                                            </button>
-                                        </td>
+                                        </th>
+                                        <th>ID</th>
+                                        <th>Scenario</th>
+                                        <th>Type</th>
+                                        <th>Level</th>
+                                        <th>Expected Result</th>
+                                        <th>Priority</th>
+                                        <th>Generated On</th>
+                                        <th style={{ width: "60px" }}>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {grouped[moduleName].map((tc, idx) => (
+                                        <tr key={tc.test_id} className={selectedIds.has(tc.test_id) ? "row-selected" : ""}>
+                                            <td>
+                                                <input
+                                                    type="checkbox"
+                                                    className="tc-checkbox"
+                                                    checked={selectedIds.has(tc.test_id)}
+                                                    onChange={() => toggleSelect(tc.test_id)}
+                                                />
+                                            </td>
+                                            <td>{idx + 1}</td>
+                                            <td>{tc.scenario}</td>
+                                            <td>
+                                                <span className={`badge badge-${tc.test_type}`}>
+                                                    {tc.test_type}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className={`badge badge-level-${(tc.test_level || "unit").toLowerCase()}`}>
+                                                    {tc.test_level || "Unit"}
+                                                </span>
+                                            </td>
+                                            <td>{tc.expected_result}</td>
+                                            <td>
+                                                <span className={`badge badge-${tc.priority.toLowerCase()}`}>
+                                                    {tc.priority}
+                                                </span>
+                                            </td>
+                                            <td style={{ fontSize: "0.8rem", whiteSpace: "nowrap", opacity: 0.8 }}>
+                                                {formatDate(tc.created_at)}
+                                            </td>
+                                            <td>
+                                                <button
+                                                    className="btn-icon-danger"
+                                                    onClick={() => openModal("delete-single", tc.test_id)}
+                                                    title="Delete test case"
+                                                >
+                                                    <FiTrash2 />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-            )}
+                ));
+            })()}
         </div>
     );
 }

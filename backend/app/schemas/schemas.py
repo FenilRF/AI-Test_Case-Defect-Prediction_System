@@ -56,6 +56,10 @@ class TestCaseOut(BaseModel):
     test_level: str = "Unit"  # Unit / Integration / System / UAT
     expected_result: str
     priority: str
+    created_at: Optional[datetime] = None
+    complexity_score: int = 1
+    duplicate_score: float = 0.0
+    coverage_tag: str = ""
 
     class Config:
         from_attributes = True
@@ -293,6 +297,24 @@ class EnterpriseTestCaseOut(BaseModel):
     test_level: str = "Unit"
     expected_result: str
     priority: str
+    created_at: Optional[datetime] = None
+    complexity_score: int = 1
+    duplicate_score: float = 0.0
+    coverage_tag: str = ""
+
+
+class GroupedTestCasesResponse(BaseModel):
+    """Module-wise grouped test cases."""
+    modules: Dict[str, List[TestCaseOut]]
+    total: int
+
+
+class CoverageReport(BaseModel):
+    """Coverage validation report."""
+    total_requirements_detected: int
+    total_test_cases_generated: int
+    coverage_percentage: float
+    uncovered_areas: List[str]
 
 
 class EnterpriseGenerationResponse(BaseModel):

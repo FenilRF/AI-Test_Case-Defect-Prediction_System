@@ -19,6 +19,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
 )
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
 from app.models.database import Base
@@ -55,6 +56,10 @@ class TestCase(Base):
     test_level = Column(String(50), nullable=True, default="Unit")  # Unit / Integration / System / UAT
     expected_result = Column(Text, nullable=False)
     priority = Column(String(10), nullable=False, default="P3")  # P1 / P2 / P3
+    created_at = Column(DateTime, server_default=func.now())  # auto-set on insert
+    complexity_score = Column(Integer, nullable=True, default=1)  # 1–5
+    duplicate_score = Column(Float, nullable=True, default=0.0)  # 0.0–1.0
+    coverage_tag = Column(String(100), nullable=True, default="")  # e.g. auth, validation, ui
 
     requirement = relationship("Requirement", back_populates="test_cases")
 

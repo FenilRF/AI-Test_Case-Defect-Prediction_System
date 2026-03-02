@@ -72,6 +72,15 @@ export const deleteSelectedTestCases = (testCaseIds) =>
 export const clearTestCasesForRequirement = (reqId) =>
     api.delete(`/test-cases/clear/${reqId}`);
 
+export const clearAllTestCases = () =>
+    api.delete("/test-cases/clear-all");
+
+export const clearModuleTestCases = (moduleName) =>
+    api.delete(`/test-cases/clear-module/${encodeURIComponent(moduleName)}`);
+
+export const getGroupedTestCases = () =>
+    api.get("/test-cases/grouped");
+
 // ── Save to Excel (requirement folder) ──────────────────────
 export const saveExcelToFolder = (reqId) =>
     api.post(`/test-cases/save-excel/${reqId}`);

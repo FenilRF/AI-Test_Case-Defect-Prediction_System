@@ -28,7 +28,7 @@ export default function UploadDesign() {
     const [requirementId, setRequirementId] = useState("");
     const [requirements, setRequirements] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useSessionState("upload_design_result", null);
+    const [result, setResult] = useState(null);
     const [error, setError] = useState("");
 
     const fileInputRef = useRef(null);

@@ -19,7 +19,7 @@ export default function UploadRequirement() {
     const [text, setText] = useSessionState("upload_req_text", "");
     const [designText, setDesignText] = useSessionState("upload_req_designText", "");
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useSessionState("upload_req_result", null);
+    const [result, setResult] = useState(null);
     const [error, setError] = useState("");
     const [excelSaving, setExcelSaving] = useState(false);
     const [excelMessage, setExcelMessage] = useState("");
