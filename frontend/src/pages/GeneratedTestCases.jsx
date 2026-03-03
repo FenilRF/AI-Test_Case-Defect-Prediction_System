@@ -6,7 +6,7 @@
  * Delete Selected, Clear All, and confirmation modals.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FiDownload, FiFilter, FiList, FiSearch, FiFileText, FiTrash2, FiXCircle, FiAlertTriangle, FiLayers } from "react-icons/fi";
 import {
     getTestCases,
@@ -31,10 +31,26 @@ export default function GeneratedTestCases() {
     const [modal, setModal] = useState({ show: false, type: "", data: null });
     const [actionLoading, setActionLoading] = useState(false);
     const [excelFileName, setExcelFileName] = useState("TC_Export");
+    const [showModuleNav, setShowModuleNav] = useState(false);
+
+    const moduleNavRef = useRef(null);
 
     useEffect(() => {
         fetchTestCases();
     }, [filterType]);
+
+    // Close module nav dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (moduleNavRef.current && !moduleNavRef.current.contains(e.target)) {
+                setShowModuleNav(false);
+            }
+        };
+        if (showModuleNav) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [showModuleNav]);
 
     const fetchTestCases = async () => {
         setLoading(true);
@@ -233,8 +249,15 @@ export default function GeneratedTestCases() {
                 </div>
             )}
 
+            {/* ── Loading Spinner ────────────────────────────── */}
+            {loading && (
+                <div className="spinner-container">
+                    <div className="spinner"></div>
+                </div>
+            )}
+
             {/* ── Level Summary Pills ─────────────────────────── */}
-            {testCases.length > 0 && (
+            {!loading && testCases.length > 0 && (
                 <div className="level-summary animate-in">
                     {["Unit", "Integration", "System", "UAT"].map((level) => (
                         <div
@@ -257,85 +280,87 @@ export default function GeneratedTestCases() {
                 </div>
             )}
 
-            {/* ── Filters & Actions ──────────────────────────── */}
-            <div className="form-section animate-in" style={{ display: "flex", gap: "1rem", alignItems: "flex-end", flexWrap: "wrap" }}>
-                <div className="form-group" style={{ flex: 1, minWidth: "200px", marginBottom: 0 }}>
-                    <label><FiSearch style={{ marginRight: 4 }} /> Search</label>
-                    <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Search by module, scenario..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <div className="form-group" style={{ minWidth: "160px", marginBottom: 0 }}>
-                    <label><FiFilter style={{ marginRight: 4 }} /> Test Type</label>
-                    <select
-                        className="form-input"
-                        value={filterType}
-                        onChange={(e) => setFilterType(e.target.value)}
-                    >
-                        <option value="">All Types</option>
-                        <option value="positive">Positive</option>
-                        <option value="negative">Negative</option>
-                        <option value="boundary">Boundary</option>
-                        <option value="edge">Edge</option>
-                        <option value="security">Security</option>
-                    </select>
-                </div>
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-                    <button className="btn-outline" onClick={handleExportCSV} disabled={testCases.length === 0}>
-                        <FiDownload /> CSV
-                    </button>
-                    <button className="btn-outline" onClick={handleExportJSON} disabled={testCases.length === 0}>
-                        <FiDownload /> JSON
-                    </button>
-                    <input
-                        type="text"
-                        className="form-input"
-                        value={excelFileName}
-                        onChange={(e) => setExcelFileName(e.target.value)}
-                        style={{ width: "130px", marginBottom: 0 }}
-                        placeholder="File Name"
-                    />
-                    <button className="btn-gradient btn-excel" onClick={handleExportExcel} disabled={testCases.length === 0 || !excelFileName.trim()}>
-                        <FiFileText /> Excel
-                    </button>
-                </div>
-            </div>
-
-            {/* ── Bulk Actions Bar ────────────────────────────── */}
-            {testCases.length > 0 && (
-                <div className="form-section animate-in" style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap", padding: "1rem 2rem" }}>
-                    <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                        {selectedIds.size > 0 ? `${selectedIds.size} selected` : "No selection"}
-                    </span>
-                    <button
-                        className="btn-danger-outline"
-                        onClick={() => openModal("delete-selected")}
-                        disabled={selectedIds.size === 0}
-                    >
-                        <FiTrash2 /> Remove Selected
-                    </button>
-                    <div style={{ flex: 1 }} />
-                    <div className="form-group" style={{ marginBottom: 0, minWidth: "130px" }}>
-                        <button
-                            className="btn-danger"
-                            onClick={() => openModal("clear-all")}
-                        >
-                            <FiXCircle /> Clear Entire Test Case List
-                        </button>
+            {/* ── Sticky Toolbar ─────────────────────────────── */}
+            {!loading && (
+                <div style={{ position: "sticky", top: 0, zIndex: 10, paddingBottom: "0.5rem", marginBottom: "1rem", background: "var(--bg-primary, #0f0f1a)" }}>
+                    {/* ── Filters & Actions */}
+                    <div className="form-section animate-in" style={{ display: "flex", gap: "1rem", alignItems: "flex-end", flexWrap: "wrap", marginBottom: 0 }}>
+                        <div className="form-group" style={{ flex: 1, minWidth: "200px", marginBottom: 0 }}>
+                            <label><FiSearch style={{ marginRight: 4 }} /> Search</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Search by module, scenario..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="form-group" style={{ minWidth: "160px", marginBottom: 0 }}>
+                            <label><FiFilter style={{ marginRight: 4 }} /> Test Type</label>
+                            <select
+                                className="form-input"
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                            >
+                                <option value="">All Types</option>
+                                <option value="positive">Positive</option>
+                                <option value="negative">Negative</option>
+                                <option value="boundary">Boundary</option>
+                                <option value="edge">Edge</option>
+                                <option value="security">Security</option>
+                            </select>
+                        </div>
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+                            <button className="btn-outline" onClick={handleExportCSV} disabled={testCases.length === 0}>
+                                <FiDownload /> CSV
+                            </button>
+                            <button className="btn-outline" onClick={handleExportJSON} disabled={testCases.length === 0}>
+                                <FiDownload /> JSON
+                            </button>
+                            <input
+                                type="text"
+                                className="form-input"
+                                value={excelFileName}
+                                onChange={(e) => setExcelFileName(e.target.value)}
+                                style={{ width: "130px", marginBottom: 0 }}
+                                placeholder="File Name"
+                            />
+                            <button className="btn-gradient btn-excel" onClick={handleExportExcel} disabled={testCases.length === 0 || !excelFileName.trim()}>
+                                <FiFileText /> Excel
+                            </button>
+                        </div>
                     </div>
+
+                    {/* ── Bulk Actions Bar */}
+                    {testCases.length > 0 && (
+                        <div className="form-section animate-in" style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap", padding: "0.75rem 2rem", marginBottom: 0, marginTop: "0.5rem" }}>
+                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                                {selectedIds.size > 0 ? `${selectedIds.size} selected` : "No selection"}
+                            </span>
+                            <button
+                                className="btn-danger-outline"
+                                onClick={() => openModal("delete-selected")}
+                                disabled={selectedIds.size === 0}
+                            >
+                                <FiTrash2 /> Remove Selected
+                            </button>
+                            <div style={{ flex: 1 }} />
+                            <div className="form-group" style={{ marginBottom: 0, minWidth: "130px" }}>
+                                <button
+                                    className="btn-danger"
+                                    onClick={() => openModal("clear-all")}
+                                >
+                                    <FiXCircle /> Clear Entire Test Case List
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    <hr style={{ margin: "0.5rem 0 0 0", opacity: 0.3 }} />
                 </div>
             )}
 
             {/* ── Test Cases — Module-Grouped Tables ─────────── */}
-            {loading ? (
-                <div className="spinner-container">
-                    <div className="spinner"></div>
-                </div>
-            ) : filtered.length === 0 ? (
+            {!loading && filtered.length === 0 ? (
                 <div className="form-section animate-in">
                     <div className="empty-state">
                         <FiList />
@@ -370,103 +395,185 @@ export default function GeneratedTestCases() {
                     return "★".repeat(s) + "☆".repeat(5 - s);
                 };
 
-                return moduleNames.map(moduleName => (
-                    <div key={moduleName} className="data-table-wrapper animate-in" style={{ marginBottom: "1.5rem" }}>
-                        <div className="data-table-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <h3 style={{ margin: 0 }}>
-                                <FiLayers style={{ marginRight: 6, verticalAlign: "middle" }} />
-                                {moduleName} Module
-                                <span style={{ fontWeight: 400, fontSize: "0.85rem", marginLeft: 8, opacity: 0.7 }}>
-                                    ({grouped[moduleName].length} cases)
-                                </span>
-                            </h3>
-                            <button
-                                className="btn-danger-outline"
-                                style={{ fontSize: "0.8rem", padding: "0.35rem 0.75rem" }}
-                                onClick={() => openModal("delete-module", moduleName)}
-                                title={`Delete all ${moduleName} test cases`}
-                            >
-                                <FiTrash2 style={{ marginRight: 4 }} /> Delete Module
-                            </button>
-                        </div>
-                        <div style={{ overflowX: "auto" }}>
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: "40px" }}>
-                                            <input
-                                                type="checkbox"
-                                                className="tc-checkbox"
-                                                checked={grouped[moduleName].every(tc => selectedIds.has(tc.test_id))}
-                                                onChange={() => {
-                                                    const ids = grouped[moduleName].map(tc => tc.test_id);
-                                                    const allSelected = ids.every(id => selectedIds.has(id));
-                                                    setSelectedIds(prev => {
-                                                        const next = new Set(prev);
-                                                        ids.forEach(id => allSelected ? next.delete(id) : next.add(id));
-                                                        return next;
-                                                    });
-                                                }}
-                                            />
-                                        </th>
-                                        <th>ID</th>
-                                        <th>Scenario</th>
-                                        <th>Type</th>
-                                        <th>Level</th>
-                                        <th>Expected Result</th>
-                                        <th>Priority</th>
-                                        <th>Generated On</th>
-                                        <th style={{ width: "60px" }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {grouped[moduleName].map((tc, idx) => (
-                                        <tr key={tc.test_id} className={selectedIds.has(tc.test_id) ? "row-selected" : ""}>
-                                            <td>
-                                                <input
-                                                    type="checkbox"
-                                                    className="tc-checkbox"
-                                                    checked={selectedIds.has(tc.test_id)}
-                                                    onChange={() => toggleSelect(tc.test_id)}
-                                                />
-                                            </td>
-                                            <td>{idx + 1}</td>
-                                            <td>{tc.scenario}</td>
-                                            <td>
-                                                <span className={`badge badge-${tc.test_type}`}>
-                                                    {tc.test_type}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className={`badge badge-level-${(tc.test_level || "unit").toLowerCase()}`}>
-                                                    {tc.test_level || "Unit"}
-                                                </span>
-                                            </td>
-                                            <td>{tc.expected_result}</td>
-                                            <td>
-                                                <span className={`badge badge-${tc.priority.toLowerCase()}`}>
-                                                    {tc.priority}
-                                                </span>
-                                            </td>
-                                            <td style={{ fontSize: "0.8rem", whiteSpace: "nowrap", opacity: 0.8 }}>
-                                                {formatDate(tc.created_at)}
-                                            </td>
-                                            <td>
+                const scrollToModule = (name) => {
+                    const el = document.getElementById(`module-${name.replace(/\s+/g, "-")}`);
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                };
+
+                return (
+                    <>
+                        {/* ── Floating Action Buttons (bottom-right) */}
+                        {moduleNames.length > 0 && (
+                            <div ref={moduleNavRef} style={{ position: "fixed", right: "1.25rem", bottom: "1.5rem", zIndex: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6rem" }}>
+                                {/* Scroll to Top */}
+                                <button
+                                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                                    style={{
+                                        width: "42px", height: "42px", borderRadius: "50%",
+                                        background: "linear-gradient(135deg, #10b981, #059669)",
+                                        border: "none", color: "#fff", fontSize: "1.1rem",
+                                        cursor: "pointer", boxShadow: "0 4px 12px rgba(16,185,129,0.35)",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        transition: "transform 0.2s",
+                                    }}
+                                    title="Scroll to Top"
+                                    onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
+                                    onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                                >
+                                    ↑
+                                </button>
+                                {/* Module Nav Toggle */}
+                                <div style={{ position: "relative" }}>
+                                    <button
+                                        onClick={() => setShowModuleNav(prev => !prev)}
+                                        style={{
+                                            width: "48px", height: "48px", borderRadius: "50%",
+                                            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                                            border: "none", color: "#fff", fontSize: "1.2rem",
+                                            cursor: "pointer", boxShadow: "0 4px 15px rgba(99,102,241,0.4)",
+                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                            transition: "transform 0.2s",
+                                        }}
+                                        title="Jump to Module"
+                                        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
+                                        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                                    >
+                                        <FiLayers />
+                                    </button>
+                                    {showModuleNav && (
+                                        <div style={{
+                                            position: "absolute", bottom: "60px", right: 0,
+                                            background: "rgba(20, 20, 40, 0.95)", borderRadius: "12px",
+                                            padding: "0.75rem", backdropFilter: "blur(10px)",
+                                            border: "1px solid rgba(255,255,255,0.1)",
+                                            minWidth: "200px", maxHeight: "50vh", overflowY: "auto",
+                                            boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+                                            display: "flex", flexDirection: "column", gap: "0.35rem",
+                                        }}>
+                                            <span style={{ fontSize: "0.7rem", textTransform: "uppercase", opacity: 0.5, letterSpacing: "1px", paddingBottom: "0.3rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>Jump to Module</span>
+                                            {moduleNames.map(name => (
                                                 <button
-                                                    className="btn-icon-danger"
-                                                    onClick={() => openModal("delete-single", tc.test_id)}
-                                                    title="Delete test case"
+                                                    key={name}
+                                                    onClick={() => { scrollToModule(name); setShowModuleNav(false); }}
+                                                    style={{
+                                                        background: "rgba(99, 102, 241, 0.1)", border: "1px solid rgba(99, 102, 241, 0.2)",
+                                                        color: "#a5b4fc", borderRadius: "8px", padding: "0.5rem 0.75rem",
+                                                        fontSize: "0.8rem", cursor: "pointer",
+                                                        textAlign: "left", transition: "all 0.2s",
+                                                    }}
+                                                    onMouseEnter={e => { e.target.style.background = "rgba(99, 102, 241, 0.3)"; e.target.style.color = "#fff"; }}
+                                                    onMouseLeave={e => { e.target.style.background = "rgba(99, 102, 241, 0.1)"; e.target.style.color = "#a5b4fc"; }}
                                                 >
-                                                    <FiTrash2 />
+                                                    {name}
                                                 </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                ));
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+
+                        {/* ── Module Tables ────────────────────────── */}
+                        {moduleNames.map(moduleName => (
+                            <div key={moduleName} id={`module-${moduleName.replace(/\s+/g, "-")}`} className="data-table-wrapper animate-in" style={{ marginBottom: "1.5rem", scrollMarginTop: "200px" }}>
+                                <div className="data-table-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+                                    <h3 style={{ margin: 0, flex: 1, minWidth: 0 }}>
+                                        <FiLayers style={{ marginRight: 6, verticalAlign: "middle" }} />
+                                        {moduleName} Module
+                                        <span style={{ fontWeight: 400, fontSize: "0.85rem", marginLeft: 8, opacity: 0.7 }}>
+                                            ({grouped[moduleName].length} cases)
+                                        </span>
+                                    </h3>
+                                    <button
+                                        className="btn-danger-outline"
+                                        style={{ fontSize: "0.8rem", padding: "0.35rem 0.75rem", flexShrink: 0, whiteSpace: "nowrap" }}
+                                        onClick={() => openModal("delete-module", moduleName)}
+                                        title={`Delete all ${moduleName} test cases`}
+                                    >
+                                        <FiTrash2 style={{ marginRight: 4 }} /> Delete Module
+                                    </button>
+                                </div>
+                                <div style={{ overflowX: "auto" }}>
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th style={{ width: "40px" }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        className="tc-checkbox"
+                                                        checked={grouped[moduleName].every(tc => selectedIds.has(tc.test_id))}
+                                                        onChange={() => {
+                                                            const ids = grouped[moduleName].map(tc => tc.test_id);
+                                                            const allSelected = ids.every(id => selectedIds.has(id));
+                                                            setSelectedIds(prev => {
+                                                                const next = new Set(prev);
+                                                                ids.forEach(id => allSelected ? next.delete(id) : next.add(id));
+                                                                return next;
+                                                            });
+                                                        }}
+                                                    />
+                                                </th>
+                                                <th>ID</th>
+                                                <th>Scenario</th>
+                                                <th>Type</th>
+                                                <th>Level</th>
+                                                <th>Expected Result</th>
+                                                <th>Priority</th>
+                                                <th>Generated On</th>
+                                                <th style={{ width: "60px" }}>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {grouped[moduleName].map((tc, idx) => (
+                                                <tr key={tc.test_id} className={selectedIds.has(tc.test_id) ? "row-selected" : ""}>
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            className="tc-checkbox"
+                                                            checked={selectedIds.has(tc.test_id)}
+                                                            onChange={() => toggleSelect(tc.test_id)}
+                                                        />
+                                                    </td>
+                                                    <td>{idx + 1}</td>
+                                                    <td>{tc.scenario}</td>
+                                                    <td>
+                                                        <span className={`badge badge-${tc.test_type}`}>
+                                                            {tc.test_type}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span className={`badge badge-level-${(tc.test_level || "unit").toLowerCase()}`}>
+                                                            {tc.test_level || "Unit"}
+                                                        </span>
+                                                    </td>
+                                                    <td>{tc.expected_result}</td>
+                                                    <td>
+                                                        <span className={`badge badge-${tc.priority.toLowerCase()}`}>
+                                                            {tc.priority}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ fontSize: "0.8rem", whiteSpace: "nowrap", opacity: 0.8 }}>
+                                                        {formatDate(tc.created_at)}
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            className="btn-icon-danger"
+                                                            onClick={() => openModal("delete-single", tc.test_id)}
+                                                            title="Delete test case"
+                                                        >
+                                                            <FiTrash2 />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ))}
+                    </>
+                );
             })()}
         </div>
     );

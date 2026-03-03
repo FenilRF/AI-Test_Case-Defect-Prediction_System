@@ -2,8 +2,9 @@
  * App Root — Router & Navigation Layout
  */
 
+import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
-import { FiHome, FiUpload, FiList, FiActivity, FiShield, FiPenTool } from "react-icons/fi";
+import { FiHome, FiUpload, FiList, FiActivity, FiShield, FiPenTool, FiMoon, FiSun } from "react-icons/fi";
 
 import HomePage from "./pages/HomePage";
 import UploadRequirement from "./pages/UploadRequirement";
@@ -15,6 +16,15 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
 function App() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === "dark" ? "light" : "dark");
+
   return (
     <Router>
       <div className="app-container">
@@ -54,7 +64,11 @@ function App() {
           </ul>
 
           <div className="sidebar-footer">
-            <small>v1.0.0 — AI Powered</small>
+            <button className="theme-toggle" onClick={toggleTheme}>
+              {theme === "dark" ? <FiSun /> : <FiMoon />}
+              <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+            </button>
+            <small style={{ marginTop: "0.5rem", display: "block" }}>v1.0.0 — AI Powered</small>
           </div>
         </nav>
 
