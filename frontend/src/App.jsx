@@ -34,15 +34,13 @@ function AppContent() {
 
   return (
     <div className="app-container">
-      {/* ── Hamburger Top Bar (mobile only) ─────────────── */}
+      {/* ── Hamburger Button (mobile only) ─────────────── */}
       <button
         className="hamburger-btn"
         onClick={() => setSidebarOpen(prev => !prev)}
         aria-label="Toggle navigation"
       >
         {sidebarOpen ? <FiX /> : <FiMenu />}
-        <FiShield style={{ fontSize: "1.1rem", color: "var(--accent-mid)" }} />
-        <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>AI TestGuard</span>
       </button>
 
       {/* ── Mobile Overlay ────────────────────────────── */}

@@ -214,10 +214,6 @@ export default function GeneratedTestCases() {
 
     return (
         <div>
-            <div className="page-header animate-in">
-                <h1>Generated Test Cases</h1>
-                <p>View, filter, manage, and export all generated test cases</p>
-            </div>
 
             {/* ── Confirmation Modal ─────────────────────────── */}
             {modal.show && (
@@ -256,9 +252,15 @@ export default function GeneratedTestCases() {
                 </div>
             )}
 
-            {/* ── Level Summary Pills ─────────────────────────── */}
-            {!loading && testCases.length > 0 && (
-                <div className="level-summary animate-in">
+            {/* ── Page Header (scrolls naturally) ──────────────── */}
+            <div className="page-header animate-in" style={{ paddingBottom: "0.5rem", marginBottom: "0.5rem" }}>
+                <h1>Generated Test Cases</h1>
+                <p>View, filter, manage, and export all generated test cases</p>
+            </div>
+
+            {/* ── Level Summary Pills (scrolls naturally) ──────── */}
+            {testCases.length > 0 && (
+                <div className="level-summary animate-in" style={{ marginBottom: "0.75rem" }}>
                     {["Unit", "Integration", "System", "UAT"].map((level) => (
                         <div
                             key={level}
@@ -280,12 +282,12 @@ export default function GeneratedTestCases() {
                 </div>
             )}
 
-            {/* ── Sticky Toolbar ─────────────────────────────── */}
+            {/* ── Sticky Toolbar (search + filters + bulk) ────── */}
             {!loading && (
-                <div className="sticky-page-header" style={{ position: "sticky", top: 0, zIndex: 10, paddingBottom: "0.5rem", background: "var(--bg-primary, #0f0f1a)" }}>
+                <div className="sticky-page-header" style={{ position: "sticky", top: 0, zIndex: 10, paddingBottom: "0.5rem", marginBottom: "0.5rem", background: "var(--bg-primary, #0f0f1a)" }}>
                     {/* ── Filters & Actions */}
                     <div className="form-section animate-in" style={{ display: "flex", gap: "1rem", alignItems: "flex-end", flexWrap: "wrap", marginBottom: 0 }}>
-                        <div className="form-group" style={{ flex: 1, minWidth: "200px", marginBottom: 0 }}>
+                        <div className="form-group search-group" style={{ flex: 1, marginBottom: 0 }}>
                             <label><FiSearch style={{ marginRight: 4 }} /> Search</label>
                             <input
                                 type="text"
@@ -295,7 +297,7 @@ export default function GeneratedTestCases() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <div className="form-group" style={{ minWidth: "160px", marginBottom: 0 }}>
+                        <div className="form-group filter-group" style={{ marginBottom: 0 }}>
                             <label><FiFilter style={{ marginRight: 4 }} /> Test Type</label>
                             <select
                                 className="form-input"
@@ -476,7 +478,7 @@ export default function GeneratedTestCases() {
 
                         {/* ── Module Tables ────────────────────────── */}
                         {moduleNames.map(moduleName => (
-                            <div key={moduleName} id={`module-${moduleName.replace(/\s+/g, "-")}`} className="data-table-wrapper animate-in" style={{ marginBottom: "1.5rem", scrollMarginTop: "250px" }}>
+                            <div key={moduleName} id={`module-${moduleName.replace(/\s+/g, "-")}`} className="data-table-wrapper animate-in" style={{ marginBottom: "1.5rem", scrollMarginTop: "160px" }}>
                                 <div className="data-table-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
                                     <h3 style={{ margin: 0, flex: 1, minWidth: 0 }}>
                                         <FiLayers style={{ marginRight: 6, verticalAlign: "middle" }} />
