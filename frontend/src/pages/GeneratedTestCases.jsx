@@ -282,7 +282,7 @@ export default function GeneratedTestCases() {
 
             {/* ── Sticky Toolbar ─────────────────────────────── */}
             {!loading && (
-                <div style={{ position: "sticky", top: 0, zIndex: 10, paddingBottom: "0.5rem", marginBottom: "1rem", background: "var(--bg-primary, #0f0f1a)" }}>
+                <div className="sticky-page-header" style={{ position: "sticky", top: 0, zIndex: 10, paddingBottom: "0.5rem", background: "var(--bg-primary, #0f0f1a)" }}>
                     {/* ── Filters & Actions */}
                     <div className="form-section animate-in" style={{ display: "flex", gap: "1rem", alignItems: "flex-end", flexWrap: "wrap", marginBottom: 0 }}>
                         <div className="form-group" style={{ flex: 1, minWidth: "200px", marginBottom: 0 }}>
@@ -476,7 +476,7 @@ export default function GeneratedTestCases() {
 
                         {/* ── Module Tables ────────────────────────── */}
                         {moduleNames.map(moduleName => (
-                            <div key={moduleName} id={`module-${moduleName.replace(/\s+/g, "-")}`} className="data-table-wrapper animate-in" style={{ marginBottom: "1.5rem", scrollMarginTop: "200px" }}>
+                            <div key={moduleName} id={`module-${moduleName.replace(/\s+/g, "-")}`} className="data-table-wrapper animate-in" style={{ marginBottom: "1.5rem", scrollMarginTop: "250px" }}>
                                 <div className="data-table-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
                                     <h3 style={{ margin: 0, flex: 1, minWidth: 0 }}>
                                         <FiLayers style={{ marginRight: 6, verticalAlign: "middle" }} />
