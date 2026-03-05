@@ -111,6 +111,13 @@ class DesignDocument(Base):
     design_urls = Column(Text, nullable=True)        # JSON list of design URLs
     analysis_result = Column(Text, nullable=True)    # JSON of design analysis output
     folder_path = Column(String(500), nullable=True) # Path to design subfolder
+    # Enterprise metadata
+    ui_schema = Column(Text, nullable=True)          # JSON of unified UI schema
+    detected_flows = Column(Text, nullable=True)     # JSON of detected flows
+    coverage_percentage = Column(Float, nullable=True)  # Enterprise coverage %
+    total_components = Column(Integer, nullable=True)   # Total UI components detected
+    total_pages = Column(Integer, nullable=True)        # Total pages analyzed
+    source_type = Column(String(50), nullable=True)     # "url" / "document" / "image" / "text"
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     requirement = relationship("Requirement", backref="design_documents")

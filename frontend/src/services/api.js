@@ -114,7 +114,7 @@ export const getDefectData = () =>
 export const uploadDesign = (formData) =>
     api.post("/design/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 60000,
+        timeout: 300000,
     });
 
 export const getDesignDocument = (designId) =>

@@ -31,6 +31,11 @@ class Settings(BaseSettings):
         "saved_models",
     )
 
+    # ── Groq LLM API ─────────────────────────────────────────
+    GROQ_API_KEY: str = ""
+    GROQ_TEXT_MODEL: str = "openai/gpt-oss-120b"
+    GROQ_VISION_MODEL: str = "meta-llama/llama-4-scout-17b-16e-instruct"
+
     # ── Logging ──────────────────────────────────────────────
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"

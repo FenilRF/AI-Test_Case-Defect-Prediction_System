@@ -255,6 +255,94 @@ class DesignDocumentOut(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════
+# Enterprise Design Intelligence Schemas
+# ═══════════════════════════════════════════════════════
+
+class UIComponentOut(BaseModel):
+    """Single detected UI component."""
+    type: str = ""
+    label: str = ""
+    source: str = ""
+    section: Optional[str] = None
+    properties: Optional[Dict[str, Any]] = None
+
+
+class UIModuleOut(BaseModel):
+    """Module with components, pages, flows, validations."""
+    module_name: str
+    pages: List[str] = []
+    ui_components: List[Dict[str, Any]] = []
+    flows: List[Dict[str, Any]] = []
+    validations_detected: List[str] = []
+
+
+class UISchemaOut(BaseModel):
+    """Full UI schema output."""
+    modules: List[UIModuleOut] = []
+    total_components: int = 0
+    total_pages: int = 0
+    total_modules: int = 0
+
+
+class DetectedFlowOut(BaseModel):
+    """Detected user flows."""
+    primary_flows: List[Dict[str, Any]] = []
+    alternate_flows: List[Dict[str, Any]] = []
+    cross_flows: List[Dict[str, Any]] = []
+    total_flows: int = 0
+
+
+class EnterpriseDesignTestCase(BaseModel):
+    """Enterprise-grade test case from design analysis."""
+    id: str = ""
+    module: str = ""
+    scenario: str = ""
+    type: str = ""
+    level: str = "UI"
+    priority: str = "P3"
+    precondition: str = ""
+    test_steps: List[str] = []
+    expected_result: str = ""
+    complexity_score: int = 2
+    coverage_tag: str = ""
+
+
+class DesignCoverageResult(BaseModel):
+    """Coverage validation result."""
+    total_test_cases: int = 0
+    enterprise_coverage_percentage: float = 0.0
+    type_distribution: Dict[str, int] = {}
+    module_distribution: Dict[str, int] = {}
+    level_distribution: Dict[str, int] = {}
+    missing_coverage: List[str] = []
+
+
+class EnterpriseDesignUploadResponse(BaseModel):
+    """Full enterprise design upload response."""
+    design_id: int
+    requirement_id: Optional[int] = None
+    uploaded_files: List[str] = []
+    design_urls: List[str] = []
+    folder_path: str = ""
+    source_type: str = ""
+    message: str = ""
+    # Enterprise analysis results
+    total_pages_analyzed: int = 0
+    total_ui_components_detected: int = 0
+    total_flows_detected: int = 0
+    total_test_cases_generated: int = 0
+    enterprise_coverage_percentage: float = 0.0
+    analysis_summary: str = ""
+    ui_schema: Optional[Dict[str, Any]] = None
+    detected_flows: Optional[Dict[str, Any]] = None
+    coverage: Optional[Dict[str, Any]] = None
+    test_cases: Optional[List[Dict[str, Any]]] = None
+    modules_grouped_test_cases: Optional[Dict[str, Any]] = None
+    # Legacy fields for backward compat
+    analysis: Optional[Dict[str, Any]] = None
+
+
+# ═══════════════════════════════════════════════════════
 # Enterprise Test Generation Schemas
 # ═══════════════════════════════════════════════════════
 

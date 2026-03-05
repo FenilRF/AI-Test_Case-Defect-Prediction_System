@@ -1,8 +1,8 @@
 """
-API Routes — Design Documentation Upload
--------------------------------------------
+API Routes — Design Documentation Upload (Enterprise Intelligence Engine)
+-------------------------------------------------------------------------
 Endpoints:
-  POST /api/design/upload           → upload design files/images/URLs
+  POST /api/design/upload           → upload design files/images/URLs + enterprise analysis
   GET  /api/design/{design_id}      → get design document details
   GET  /api/design/by-requirement/{req_id} → list designs for a requirement
 """
@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import shutil
+import traceback
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -19,18 +20,13 @@ from sqlalchemy.orm import Session
 from app.models.database import get_db
 from app.models.models import DesignDocument, Requirement
 from app.schemas.schemas import (
-    DesignUploadResponse,
-    DesignAnalysisResult,
+    EnterpriseDesignUploadResponse,
     DesignDocumentOut,
-    TestCaseOut,
 )
-from app.services.design_analysis_service import analyse_design
 from app.services.folder_storage_service import (
     create_design_folder,
     save_design_links,
 )
-from app.services.test_case_generator import generate_test_cases
-from app.services.nlp_service import parse_requirement
 
 logger = logging.getLogger(__name__)
 
@@ -56,37 +52,7 @@ def _validate_file(file: UploadFile) -> str:
     return ext
 
 
-def _extract_text_from_file(file_path: str, ext: str) -> str:
-    """
-    Extract text content from uploaded files for analysis.
-    Only extracts from TXT files — other formats store filename as context.
-    """
-    if ext == ".txt":
-        try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                return f.read()
-        except Exception as e:
-            logger.warning("Could not read text from %s: %s", file_path, e)
-    elif ext == ".pdf":
-        try:
-            import PyPDF2
-            with open(file_path, "rb") as f:
-                reader = PyPDF2.PdfReader(f)
-                return "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
-        except Exception as e:
-            logger.warning("PDF extraction failed (PyPDF2 might not be installed): %s", e)
-    elif ext in (".docx", ".doc"):
-        try:
-            import docx
-            doc = docx.Document(file_path)
-            return "\n".join([p.text for p in doc.paragraphs])
-        except Exception as e:
-            logger.warning("DOCX extraction failed (python-docx might not be installed): %s", e)
-    # For non-text files, return the filename as minimal context
-    return os.path.basename(file_path)
-
-
-@router.post("/upload", response_model=DesignUploadResponse)
+@router.post("/upload", response_model=EnterpriseDesignUploadResponse)
 async def upload_design(
     design_text: str = Form(None),
     design_url: str = Form(None),
@@ -97,20 +63,22 @@ async def upload_design(
     """
     Upload design documentation — files, images, and/or URLs.
 
-    At least one input (file, image, or URL) is required.
-    Associates design with requirement_id if provided.
-    Stores design inside the requirement-specific folder under design/.
-
-    After upload, performs lightweight design analysis.
+    Enterprise Intelligence Engine:
+    1. Detects input type (URL/Document/Image)
+    2. Extracts UI components via DOM + Vision LLM (Llama 4 Scout)
+    3. Builds structured UI Schema
+    4. Detects user flows
+    5. Generates enterprise test cases via LLM (gpt-oss-120b)
+    6. Validates coverage and quality
     """
     # ── Parse URLs ────────────────────────────────────────
     import re
     design_urls = []
     if design_url and design_url.strip():
         u = design_url.strip()
-        url_pattern = re.compile(r"^(https?://)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(/.*)?$")
         if not u.startswith("http"):
             u = "https://" + u
+        url_pattern = re.compile(r"^(https?://)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(/.*)?$")
         if not url_pattern.match(u):
             raise HTTPException(status_code=400, detail=f"Invalid URL format: {u}")
         design_urls.append(u)
@@ -121,27 +89,24 @@ async def upload_design(
         all_files.append(file)
 
     # ── Validate: at least one input required ─────────────
-    if not all_files and not design_urls and not design_text:
+    if not all_files and not design_urls and not (design_text and design_text.strip()):
         raise HTTPException(
             status_code=400,
             detail="At least one input is required: text, file, image, or URL.",
         )
 
     # ── Validate requirement_id (if provided) ─────────────
-    requirement_folder_path = None
     if requirement_id:
         req = db.query(Requirement).filter(Requirement.id == requirement_id).first()
         if not req:
             raise HTTPException(status_code=404, detail=f"Requirement #{requirement_id} not found")
-        requirement_folder_path = req.folder_path
 
-    # ── Create temp design folder ─────────────────────────
-    design_folder = create_design_folder(module_name="Unknown")
+    # ── Create design folder ─────────────────────────────
+    design_folder = create_design_folder(module_name="Design_Analysis")
 
     # ── Validate & save files ─────────────────────────────
     saved_file_names = []
     saved_file_paths = []
-    extracted_texts = []
 
     for f in all_files:
         ext = _validate_file(f)
@@ -150,7 +115,6 @@ async def upload_design(
         safe_name = f.filename.replace("..", "_").replace("/", "_").replace("\\", "_")
         dest_path = os.path.join(design_folder, safe_name)
 
-        # Save file
         try:
             contents = await f.read()
             if len(contents) > _MAX_FILE_SIZE_MB * 1024 * 1024:
@@ -163,11 +127,6 @@ async def upload_design(
             saved_file_names.append(safe_name)
             saved_file_paths.append(dest_path)
             logger.info("Saved design file: %s → %s", f.filename, dest_path)
-
-            # Extract text for analysis
-            text = _extract_text_from_file(dest_path, ext)
-            if text:
-                extracted_texts.append(text)
         except HTTPException:
             raise
         except Exception as e:
@@ -177,82 +136,109 @@ async def upload_design(
     # ── Save design URLs ──────────────────────────────────
     if design_urls:
         save_design_links(design_folder, design_urls)
-        # Add URL text to analysis context
-        for u in design_urls:
-            extracted_texts.append(f"design url: {u}")
 
-    if design_text and design_text.strip():
-        extracted_texts.append(design_text.strip())
-
-    # ── Design analysis ───────────────────────────────────
-    combined_text = "\n".join(extracted_texts) if extracted_texts else "Design documentation uploaded"
-    analysis = analyse_design(
-        combined_text=combined_text,
-        file_names=saved_file_names,
-        urls=design_urls,
-    )
-
-    # ── Update folder name with module ────────────────────
-    new_folder = design_folder
-    if analysis.get("modules"):
-        mod_name = analysis["modules"][0]
-        base_dir = os.path.dirname(design_folder)
-        base_name = os.path.basename(design_folder)
-        new_base = base_name.replace("Unknown", mod_name.replace(" ", "_"))
-        new_folder = os.path.join(base_dir, new_base)
-        if new_folder != design_folder:
-            try:
-                os.rename(design_folder, new_folder)
-                
-                # Update paths in saved_file_paths to point to new folder
-                saved_file_paths = [p.replace(design_folder, new_folder) for p in saved_file_paths]
-                logger.info("Renamed design folder to: %s", new_folder)
-            except Exception as e:
-                logger.warning("Could not rename design folder to %s: %s", new_folder, e)
-                new_folder = design_folder
-
-    # ── Generate Test Cases ───────────────────────────────
+    # ═══════════════════════════════════════════════════════
+    # ENTERPRISE DESIGN INTELLIGENCE ENGINE
+    # ═══════════════════════════════════════════════════════
     try:
-        parsed_req = parse_requirement(combined_text)
-        raw_test_cases = generate_test_cases(parsed_req)
+        from app.services.design_intelligence_engine import analyze_design_intelligent
 
-        # Ensure ID generation or use dummy IDs for design tests
-        parsed_test_cases = []
-        for i, tc in enumerate(raw_test_cases, 1):
-            parsed_test_cases.append({
-                "test_id": i + 10000, # Fake ID series or we insert to DB
-                "module_name": tc.get("module_name", "Unknown"),
-                "scenario": tc.get("scenario", ""),
-                "test_type": tc.get("test_type", ""),
-                "test_level": tc.get("test_level", "Unit"),
-                "expected_result": tc.get("expected_result", ""),
-                "priority": tc.get("priority", "P3"),
-            })
-            
-        tc_file_path = os.path.join(new_folder, "test_cases.json")
-        with open(tc_file_path, "w", encoding="utf-8") as f:
-            json.dump(parsed_test_cases, f, indent=2)
-        logger.info("Saved generated design test cases to %s", tc_file_path)
+        intelligence_result = await analyze_design_intelligent(
+            file_paths=saved_file_paths,
+            urls=design_urls,
+            design_text=design_text if design_text and design_text.strip() else None,
+            output_dir=design_folder,
+        )
+
+        source_type = intelligence_result.get("source_type", "unknown")
+        total_pages = intelligence_result.get("total_pages_analyzed", 0)
+        total_components = intelligence_result.get("total_ui_components_detected", 0)
+        total_flows = intelligence_result.get("total_flows_detected", 0)
+        total_tests = intelligence_result.get("total_test_cases_generated", 0)
+        coverage_pct = intelligence_result.get("enterprise_coverage_percentage", 0.0)
+        analysis_summary = intelligence_result.get("analysis_summary", "")
+        ui_schema = intelligence_result.get("ui_schema", {})
+        detected_flows = intelligence_result.get("detected_flows", {})
+        test_result = intelligence_result.get("test_generation_result", {})
+        test_cases = test_result.get("test_cases", [])
+        coverage = test_result.get("coverage", {})
+        modules_grouped = test_result.get("modules_grouped", {})
+
     except Exception as e:
-        logger.warning("Test cases could not be generated for design: %s", e)
-        parsed_test_cases = []
+        logger.error("Design Intelligence Engine failed: %s", e)
+        logger.error("Full traceback:\n%s", traceback.format_exc())
+        # Graceful fallback — still store the upload even if LLM fails
+        source_type = "unknown"
+        total_pages = 0
+        total_components = 0
+        total_flows = 0
+        total_tests = 0
+        coverage_pct = 0.0
+        analysis_summary = f"Intelligence engine encountered an error: {str(e)}"
+        ui_schema = {}
+        detected_flows = {}
+        test_cases = []
+        coverage = {}
+        modules_grouped = {}
+
+    # ── Save test cases to folder ─────────────────────────
+    if test_cases:
+        try:
+            tc_file_path = os.path.join(design_folder, "enterprise_test_cases.json")
+            with open(tc_file_path, "w", encoding="utf-8") as f:
+                json.dump(test_cases, f, indent=2, default=str)
+            logger.info("Saved %d enterprise test cases to %s", len(test_cases), tc_file_path)
+        except Exception as e:
+            logger.warning("Could not save test cases JSON: %s", e)
+
+    # ── Build legacy analysis for backward compat ─────────
+    legacy_analysis = {
+        "modules": [m.get("module_name", "Unknown") for m in ui_schema.get("modules", [])],
+        "module_count": ui_schema.get("total_modules", 0),
+        "integrations": [],
+        "integration_count": 0,
+        "classification": {
+            "ui_score": total_components,
+            "api_score": 0,
+            "system_score": 0,
+            "primary_type": "UI-Focused",
+        },
+        "design_sources": {
+            "files": saved_file_names,
+            "urls": design_urls,
+        },
+        "summary": analysis_summary,
+    }
 
     # ── Store metadata in database ────────────────────────
-    design_doc = DesignDocument(
-        requirement_id=requirement_id,
-        file_names=json.dumps(saved_file_names),
-        file_paths=json.dumps(saved_file_paths),
-        design_urls=json.dumps(design_urls),
-        analysis_result=json.dumps(analysis),
-        folder_path=new_folder,
-    )
-    db.add(design_doc)
-    db.commit()
-    db.refresh(design_doc)
+    try:
+        design_doc = DesignDocument(
+            requirement_id=requirement_id,
+            file_names=json.dumps(saved_file_names),
+            file_paths=json.dumps(saved_file_paths),
+            design_urls=json.dumps(design_urls),
+            analysis_result=json.dumps(legacy_analysis),
+            folder_path=design_folder,
+            ui_schema=json.dumps(ui_schema, default=str),
+            detected_flows=json.dumps(detected_flows, default=str),
+            coverage_percentage=coverage_pct,
+            total_components=total_components,
+            total_pages=total_pages,
+            source_type=source_type,
+        )
+        db.add(design_doc)
+        db.commit()
+        db.refresh(design_doc)
+    except Exception as e:
+        logger.error("DB commit failed: %s", e)
+        logger.error("Full traceback:\n%s", traceback.format_exc())
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     logger.info(
-        "Design uploaded: id=%d, req_id=%s, files=%d, urls=%d",
+        "Design uploaded: id=%d, req_id=%s, files=%d, urls=%d, tests=%d, coverage=%.1f%%",
         design_doc.id, requirement_id, len(saved_file_names), len(design_urls),
+        total_tests, coverage_pct,
     )
 
     # ── Build response ────────────────────────────────────
@@ -263,18 +249,36 @@ async def upload_design(
         msg_parts.append(f"{file_count} file(s) uploaded")
     if url_count:
         msg_parts.append(f"{url_count} URL(s) linked")
-    message = " and ".join(msg_parts) + " successfully."
+    if total_tests > 0:
+        msg_parts.append(f"{total_tests} enterprise test cases generated")
+    message = " and ".join(msg_parts) + " successfully." if msg_parts else "Design processed."
 
-    return DesignUploadResponse(
-        design_id=design_doc.id,
-        requirement_id=requirement_id,
-        uploaded_files=saved_file_names,
-        design_urls=design_urls,
-        folder_path=new_folder,
-        analysis=DesignAnalysisResult(**analysis),
-        message=message,
-        test_cases=parsed_test_cases,
-    )
+    try:
+        return EnterpriseDesignUploadResponse(
+            design_id=design_doc.id,
+            requirement_id=requirement_id,
+            uploaded_files=saved_file_names,
+            design_urls=design_urls,
+            folder_path=design_folder,
+            source_type=source_type,
+            message=message,
+            total_pages_analyzed=total_pages,
+            total_ui_components_detected=total_components,
+            total_flows_detected=total_flows,
+            total_test_cases_generated=total_tests,
+            enterprise_coverage_percentage=coverage_pct,
+            analysis_summary=analysis_summary,
+            ui_schema=ui_schema,
+            detected_flows=detected_flows,
+            coverage=coverage,
+            test_cases=test_cases,
+            modules_grouped_test_cases=modules_grouped,
+            analysis=legacy_analysis,
+        )
+    except Exception as e:
+        logger.error("Response serialization failed: %s", e)
+        logger.error("Full traceback:\n%s", traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Response error: {str(e)}")
 
 
 @router.get("/{design_id}")
@@ -291,6 +295,12 @@ def get_design_document(design_id: int, db: Session = Depends(get_db)):
         "design_urls": json.loads(doc.design_urls) if doc.design_urls else [],
         "folder_path": doc.folder_path,
         "analysis": json.loads(doc.analysis_result) if doc.analysis_result else None,
+        "ui_schema": json.loads(doc.ui_schema) if doc.ui_schema else None,
+        "detected_flows": json.loads(doc.detected_flows) if doc.detected_flows else None,
+        "coverage_percentage": doc.coverage_percentage,
+        "total_components": doc.total_components,
+        "total_pages": doc.total_pages,
+        "source_type": doc.source_type,
         "created_at": doc.created_at,
     }
 
@@ -311,6 +321,9 @@ def list_designs_for_requirement(req_id: int, db: Session = Depends(get_db)):
             "design_urls": json.loads(doc.design_urls) if doc.design_urls else [],
             "folder_path": doc.folder_path,
             "analysis": json.loads(doc.analysis_result) if doc.analysis_result else None,
+            "source_type": doc.source_type,
+            "total_components": doc.total_components,
+            "coverage_percentage": doc.coverage_percentage,
             "created_at": doc.created_at,
         }
         for doc in docs
