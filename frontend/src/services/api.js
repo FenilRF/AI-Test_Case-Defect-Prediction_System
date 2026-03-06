@@ -54,8 +54,11 @@ export const exportTestCasesJSON = (requirementId) => {
     return api.get("/test-cases/export/json", { params });
 };
 
-export const exportTestCasesExcel = (requirementId, fileName) => {
-    const params = requirementId ? { requirement_id: requirementId } : {};
+export const exportTestCasesExcel = (requirementId, fileName, moduleName) => {
+    const params = {};
+    if (requirementId) params.requirement_id = requirementId;
+    if (moduleName) params.module_name = encodeURIComponent(moduleName);
+
     return api.post("/test-cases/export/excel", { file_name: fileName }, {
         params,
         responseType: "blob",

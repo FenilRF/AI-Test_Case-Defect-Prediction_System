@@ -146,8 +146,8 @@ export default function DefectPrediction() {
     return (
         <div>
             <div className="page-header animate-in">
-                <h1>Defect Prediction</h1>
-                <p>Predict defect probability for modules using ML-based analysis</p>
+                <h1>Defect Prediction Engine</h1>
+                <p>Machine-learning powered defect probability analysis for your modules.</p>
             </div>
 
             <div className="section-grid two-col">
@@ -183,7 +183,7 @@ export default function DefectPrediction() {
                                 />
                             </div>
                             <div className="form-group">
-                                <label htmlFor="complexity_score">Complexity Score</label>
+                                <label htmlFor="complexity_score">Cyclomatic Complexity</label>
                                 <input
                                     id="complexity_score"
                                     name="complexity_score"

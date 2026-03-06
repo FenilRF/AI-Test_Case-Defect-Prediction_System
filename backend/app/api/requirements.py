@@ -445,17 +445,25 @@ def export_json(
 def export_excel(
     payload: ExportExcelRequest,
     requirement_id: Optional[int] = Query(None),
+    module_name: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
     """Export test cases as a styled Excel (.xlsx) download and save to folder."""
     query = db.query(TestCase)
     if requirement_id:
         query = query.filter(TestCase.requirement_id == requirement_id)
+    if module_name:
+        from urllib.parse import unquote
+        decoded_name = unquote(module_name)
+        query = query.filter(TestCase.module_name == decoded_name)
+    
     cases = query.all()
 
-    module_name = "AllModules"
-    if requirement_id and cases:
-        module_name = cases[0].module_name
+    export_module_name = "AllModules"
+    if module_name:
+        export_module_name = decoded_name
+    elif requirement_id and cases:
+        export_module_name = cases[0].module_name
 
     data = [
         {

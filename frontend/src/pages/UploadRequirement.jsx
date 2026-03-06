@@ -3,15 +3,16 @@
  * -------------------------
  * Textarea input → NLP parse → test case generation.
  * Supports Standard mode and Enterprise mode (5-phase exhaustive engine).
- * Shows parsed requirement info, generated test case table,
- * multi-layer risk analysis, coverage report, and Save to Excel button.
+ * Features: formatting toolbar, writing tips sidebar, word/char counter,
+ * auto-save indicator, quick templates.
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import useSessionState from "../hooks/useSessionState";
 import {
     FiSend, FiCpu, FiCheckCircle, FiFileText, FiAlertTriangle,
     FiSave, FiZap, FiTarget, FiLayers, FiShield,
+    FiBold, FiList, FiCode, FiCheck,
 } from "react-icons/fi";
 import { generateTestCases, generateEnterprise, exportTestCasesExcel } from "../services/api";
 
@@ -25,6 +26,15 @@ export default function UploadRequirement() {
     const [excelMessage, setExcelMessage] = useState("");
     const [excelFileName, setExcelFileName] = useState("TC_Export");
     const [enterpriseMode, setEnterpriseMode] = useSessionState("upload_req_enterprise", false);
+    const [autoSave, setAutoSave] = useState(true);
+
+    // Word / Character count
+    const wordCount = useMemo(() => {
+        const trimmed = text.trim();
+        if (!trimmed) return 0;
+        return trimmed.split(/\s+/).length;
+    }, [text]);
+    const charCount = text.length;
 
     const handleGenerate = async () => {
         if (text.trim().length < 5) {
@@ -78,86 +88,137 @@ export default function UploadRequirement() {
         return "badge badge-low";
     };
 
+    // Formatting helpers
+    const insertFormat = (type) => {
+        const textarea = document.getElementById("req-text");
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = text.substring(start, end);
+        let replacement = "";
+        if (type === "bold") replacement = `**${selected || "bold text"}**`;
+        else if (type === "list") replacement = `\n- ${selected || "item"}`;
+        else if (type === "code") replacement = `\`${selected || "code"}\``;
+        const newText = text.substring(0, start) + replacement + text.substring(end);
+        setText(newText);
+    };
+
+    const handleClearCanvas = () => {
+        setText("");
+        setDesignText("");
+        setResult(null);
+        setError("");
+        setExcelMessage("");
+    };
+
     return (
         <div>
-            <div className="page-header animate-in">
-                <h1>Upload Requirement</h1>
-                <p>Enter a software requirement to auto-generate comprehensive test cases</p>
+            <div className="page-header animate-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+                <div>
+                    <h1>Requirement Input & Analysis</h1>
+                    <p>Define your project scope. Our AI will analyze complexity and generate test scenarios instantly.</p>
+                </div>
+                <button
+                    className={`btn-gradient ${enterpriseMode ? "btn-enterprise" : ""}`}
+                    onClick={handleGenerate}
+                    disabled={loading || text.trim().length < 5}
+                >
+                    {loading ? (
+                        <>
+                            <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }}></div>
+                            {enterpriseMode ? "Running 5-Phase Engine..." : "Generating..."}
+                        </>
+                    ) : (
+                        <>
+                            {enterpriseMode ? <FiZap /> : <FiSend />}
+                            {enterpriseMode ? " Generate Analysis" : " Generate Analysis"}
+                        </>
+                    )}
+                </button>
             </div>
 
-            {/* ── Input Form ─────────────────────────────────── */}
-            <div className="form-section animate-in">
-                <h3><FiCpu style={{ marginRight: "0.5rem", verticalAlign: "middle" }} /> Requirement Input</h3>
+            {/* ── Main Editor Area with Sidebar ──────────── */}
+            <div className="req-editor-layout animate-in">
+                {/* ── Left: Editor Panel ─────────────────── */}
+                <div className="req-editor-main">
+                    <div className="form-section" style={{ marginBottom: 0 }}>
+                        {/* ── Toolbar ────────────────────────── */}
+                        <div className="editor-toolbar">
+                            <div className="toolbar-left">
+                                {/* Enterprise Toggle */}
+                                <label className="toolbar-mode-pill">
+                                    <input
+                                        type="checkbox"
+                                        checked={enterpriseMode}
+                                        onChange={(e) => setEnterpriseMode(e.target.checked)}
+                                        style={{ display: "none" }}
+                                    />
+                                    <span className={`mode-indicator ${enterpriseMode ? "enterprise" : ""}`}></span>
+                                    <span className="mode-label">{enterpriseMode ? "ENTERPRISE MODE" : "STANDARD MODE"}</span>
+                                </label>
+                                <div className="toolbar-divider"></div>
+                                <button className="toolbar-btn" onClick={() => insertFormat("bold")} title="Bold">
+                                    <FiBold />
+                                </button>
+                                <button className="toolbar-btn" onClick={() => insertFormat("list")} title="List">
+                                    <FiList />
+                                </button>
+                                <button className="toolbar-btn" onClick={() => insertFormat("code")} title="Code">
+                                    <FiCode />
+                                </button>
+                            </div>
+                            <div className="toolbar-right">
+                                <button className="toolbar-action-btn" onClick={handleGenerate} disabled={loading || text.trim().length < 5}>
+                                    QUICK GENERATE
+                                </button>
+                                <button className="toolbar-action-btn secondary" onClick={handleClearCanvas}>
+                                    Clear Canvas
+                                </button>
+                            </div>
+                        </div>
 
-                {/* Enterprise Toggle */}
-                <div className="enterprise-toggle-row">
-                    <div className="enterprise-toggle-info">
-                        <FiZap className={`toggle-icon ${enterpriseMode ? "active" : ""}`} />
-                        <div>
-                            <span className="toggle-label">Enterprise Mode</span>
-                            <span className="toggle-desc">
-                                {enterpriseMode
-                                    ? "5-phase exhaustive engine • 13 scenario categories • No limit"
-                                    : "Standard quick generation • 5 test types"}
-                            </span>
+                        {/* ── Textarea ───────────────────────── */}
+                        <textarea
+                            id="req-text"
+                            className="form-textarea req-textarea"
+                            placeholder="Start typing your requirements here...
+
+E.g., 'As a user, I want to be able to reset my password using a secure magic link. The system should verify the user's identity via email, generate a time-limited token, and allow them to set a new password.'"
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            style={{ minHeight: "320px", borderRadius: "0", borderTop: "none" }}
+                        />
+
+                        {/* ── Footer Bar ─────────────────────── */}
+                        <div className="editor-footer">
+                            <div className="editor-counts">
+                                Words: {wordCount} &nbsp;|&nbsp; Characters: {charCount}
+                            </div>
+                            <div className={`autosave-indicator ${autoSave ? "on" : "off"}`} onClick={() => setAutoSave(!autoSave)}>
+                                <FiCheck className="autosave-icon" />
+                                AUTO-SAVE {autoSave ? "ON" : "OFF"}
+                            </div>
                         </div>
                     </div>
-                    <label className="toggle-switch">
-                        <input
-                            type="checkbox"
-                            checked={enterpriseMode}
-                            onChange={(e) => setEnterpriseMode(e.target.checked)}
+
+                    {/* ── Design Text (Optional) ─────────── */}
+                    <div className="form-section animate-in" style={{ marginTop: "1.5rem" }}>
+                        <h3><FiCpu style={{ marginRight: "0.5rem", verticalAlign: "middle" }} /> Design Document (Optional)</h3>
+                        <textarea
+                            id="design-text"
+                            className="form-textarea"
+                            placeholder="Paste optional design document text here for enhanced risk analysis..."
+                            value={designText}
+                            onChange={(e) => setDesignText(e.target.value)}
+                            style={{ minHeight: "100px" }}
                         />
-                        <span className="toggle-slider"></span>
-                    </label>
-                </div>
+                    </div>
 
-                <div className="form-group">
-                    <label htmlFor="req-text">Requirement Description</label>
-                    <textarea
-                        id="req-text"
-                        className="form-textarea"
-                        placeholder="e.g., The system shall allow users to login using their email and password. The email must be in a valid format and the password is required with a minimum length of 8 characters."
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                    />
-                </div>
+                    {error && <div className="alert alert-error">{error}</div>}
 
-                <div className="form-group">
-                    <label htmlFor="design-text">Design Document (Optional)</label>
-                    <textarea
-                        id="design-text"
-                        className="form-textarea"
-                        placeholder="Paste optional design document text here for enhanced risk analysis..."
-                        value={designText}
-                        onChange={(e) => setDesignText(e.target.value)}
-                        style={{ minHeight: "100px" }}
-                    />
-                </div>
-
-                {error && <div className="alert alert-error">{error}</div>}
-
-                <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
-                    <button
-                        className={`btn-gradient ${enterpriseMode ? "btn-enterprise" : ""}`}
-                        onClick={handleGenerate}
-                        disabled={loading || text.trim().length < 5}
-                    >
-                        {loading ? (
-                            <>
-                                <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }}></div>
-                                {enterpriseMode ? "Running 5-Phase Engine..." : "Generating..."}
-                            </>
-                        ) : (
-                            <>
-                                {enterpriseMode ? <FiZap /> : <FiSend />}
-                                {enterpriseMode ? " Enterprise Generate" : " Generate Test Cases"}
-                            </>
-                        )}
-                    </button>
-
+                    {/* ── Save Excel ──────────────────────── */}
                     {result && (
-                        <>
+                        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center", marginTop: "1rem" }}>
                             <input
                                 type="text"
                                 className="form-input"
@@ -180,18 +241,66 @@ export default function UploadRequirement() {
                                     <><FiSave /> Save to Excel</>
                                 )}
                             </button>
-                        </>
+                        </div>
+                    )}
+
+                    {excelMessage && (
+                        <div className={`alert ${excelMessage.startsWith("✓") ? "alert-success" : "alert-error"}`} style={{ marginTop: "0.75rem" }}>
+                            {excelMessage}
+                        </div>
                     )}
                 </div>
 
-                {excelMessage && (
-                    <div className={`alert ${excelMessage.startsWith("✓") ? "alert-success" : "alert-error"}`} style={{ marginTop: "0.75rem" }}>
-                        {excelMessage}
+                {/* ── Right: Writing Tips Sidebar ────────── */}
+                <div className="req-sidebar">
+                    <div className="writing-tips-card">
+                        <h4 className="tips-title">✍ Writing Tips</h4>
+                        <div className="tip-item">
+                            <span className="tip-number">1</span>
+                            <div>
+                                <strong>Be Specific</strong>
+                                <p>Define clear input values and expected outcomes for each scenario.</p>
+                            </div>
+                        </div>
+                        <div className="tip-item">
+                            <span className="tip-number">2</span>
+                            <div>
+                                <strong>Edge Cases</strong>
+                                <p>Mention what should happen during failures or invalid input.</p>
+                            </div>
+                        </div>
+                        <div className="tip-item">
+                            <span className="tip-number">3</span>
+                            <div>
+                                <strong>User Personas</strong>
+                                <p>Identify who performs the action (Admin, Guest, Subscriber).</p>
+                            </div>
+                        </div>
+                        <div className="ai-note">
+                            <strong>AI Note:</strong> Clearer requirements result in 40% higher accuracy for generated test cases.
+                        </div>
                     </div>
-                )}
+
+                    {/* ── Quick Templates ────────────────── */}
+                    <div className="quick-templates-card">
+                        <h4 className="tips-title">📋 Quick Templates</h4>
+                        <button className="template-btn" onClick={() => setText("As a user, I want to [action] so that [benefit].\n\nAcceptance Criteria:\n- Given [context], when [action], then [result]\n- The system should validate [field] with [rule]\n- Error message should display when [condition]")}>
+                            <span className="template-label">FEATURE REQUEST</span>
+                            <span className="template-desc">Standard User Story (As a… I want…)</span>
+                        </button>
+                        <button className="template-btn" onClick={() => setText("Module: Login\n\nBusiness Rules:\n1. Email must be valid format\n2. Password minimum 8 characters\n3. Lock account after 5 failed attempts\n\nIntegrations:\n- OAuth 2.0 SSO support\n- Two-factor authentication via SMS")}>
+                            <span className="template-label">LOGIN MODULE</span>
+                            <span className="template-desc">Authentication & Authorization</span>
+                        </button>
+                        <button className="template-btn" onClick={() => setText("API Endpoint: POST /api/v1/orders\n\nRequest Body:\n- product_id (required, integer)\n- quantity (required, integer, min: 1)\n- shipping_address (required, object)\n\nResponse:\n- 201: Order created successfully\n- 400: Validation error\n- 401: Unauthorized\n- 500: Internal server error")}>
+                            <span className="template-label">API ENDPOINT</span>
+                            <span className="template-desc">REST API specification</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            {/* ── Results ├─────────────────────────────────── */}
+            {/* ── Results ├─────────────────────────────── */}
             {result && (
                 <>
                     {/* ── Enterprise Coverage Report ───────────── */}

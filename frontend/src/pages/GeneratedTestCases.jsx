@@ -24,6 +24,7 @@ export default function GeneratedTestCases() {
     const [loading, setLoading] = useState(true);
     const [filterType, setFilterType] = useState("");
     const [filterLevel, setFilterLevel] = useState("");
+    const [filterModule, setFilterModule] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -174,9 +175,30 @@ export default function GeneratedTestCases() {
         }
     };
 
+    const handleExportModuleExcel = async (moduleName) => {
+        try {
+            const safeName = moduleName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const res = await exportTestCasesExcel(null, `Module_${safeName}_Export`, moduleName);
+            const blob = new Blob([res.data], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Module_${safeName}_Export.xlsx`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error("Module Excel export error:", err);
+        }
+    };
+
     // ── Filtering ─────────────────────────────────────────
+    const allModules = [...new Set(testCases.map(tc => tc.module_name || "General"))].sort();
+
     const filtered = testCases.filter((tc) => {
         if (filterLevel && (tc.test_level || "Unit") !== filterLevel) return false;
+        if (filterModule && (tc.module_name || "General") !== filterModule) return false;
         if (!searchTerm) return true;
         const term = searchTerm.toLowerCase();
         return (
@@ -245,6 +267,12 @@ export default function GeneratedTestCases() {
                 </div>
             )}
 
+            {/* ── Page Header (always visible) ──────────────── */}
+            <div className="page-header animate-in" style={{ paddingBottom: "0.5rem", marginBottom: "0.5rem" }}>
+                <h1>Generated Test Cases</h1>
+                <p>Browse, manage, and export all generated test cases.</p>
+            </div>
+
             {/* ── Loading Spinner ────────────────────────────── */}
             {loading && (
                 <div className="spinner-container">
@@ -252,58 +280,27 @@ export default function GeneratedTestCases() {
                 </div>
             )}
 
-            {/* ── Page Header (scrolls naturally) ──────────────── */}
-            <div className="page-header animate-in" style={{ paddingBottom: "0.5rem", marginBottom: "0.5rem" }}>
-                <h1>Generated Test Cases</h1>
-                <p>View, filter, manage, and export all generated test cases</p>
-            </div>
-
-            {/* ── Level Summary Pills (scrolls naturally) ──────── */}
-            {testCases.length > 0 && (
-                <div className="level-summary animate-in" style={{ marginBottom: "0.75rem" }}>
-                    {["Unit", "Integration", "System", "UAT"].map((level) => (
-                        <div
-                            key={level}
-                            className={`level-pill ${filterLevel === level ? "active" : ""}`}
-                            onClick={() => setFilterLevel(filterLevel === level ? "" : level)}
-                        >
-                            <span className={`badge badge-level-${level.toLowerCase()}`}>{level}</span>
-                            <span className="level-count">{levelCounts[level] || 0}</span>
-                        </div>
-                    ))}
-                    {filterLevel && (
-                        <button
-                            className="btn-clear-filter"
-                            onClick={() => setFilterLevel("")}
-                        >
-                            Clear Level Filter
-                        </button>
-                    )}
-                </div>
-            )}
-
-            {/* ── Sticky Toolbar (search + filters + bulk) ────── */}
+            {/* ── Sticky Toolbar ───────────────────────────── */}
             {!loading && (
-                <div className="sticky-page-header" style={{ position: "sticky", top: 0, zIndex: 10, paddingBottom: "0.5rem", marginBottom: "0.5rem", background: "var(--bg-primary, #0f0f1a)" }}>
-                    {/* ── Filters & Actions */}
-                    <div className="form-section animate-in" style={{ display: "flex", gap: "1rem", alignItems: "flex-end", flexWrap: "wrap", marginBottom: 0 }}>
-                        <div className="form-group search-group" style={{ flex: 1, marginBottom: 0 }}>
-                            <label><FiSearch style={{ marginRight: 4 }} /> Search</label>
-                            <input
-                                type="text"
-                                className="form-input"
-                                placeholder="Search by module, scenario..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <div className="form-group filter-group" style={{ marginBottom: 0 }}>
-                            <label><FiFilter style={{ marginRight: 4 }} /> Test Type</label>
-                            <select
-                                className="form-input"
-                                value={filterType}
-                                onChange={(e) => setFilterType(e.target.value)}
-                            >
+                <div className="sticky-page-header" style={{ position: "sticky", top: 56, zIndex: 10, paddingBottom: "0.5rem", marginBottom: "0.5rem", background: "var(--bg-primary, #0f0f1a)" }}>
+                    <div className="tc-toolbar-card animate-in">
+                        {/* ── Search + Filters Row */}
+                        <div className="tc-search-row">
+                            <div className="tc-search-box">
+                                <FiSearch className="tc-search-icon" />
+                                <input
+                                    type="text"
+                                    className="tc-search-input"
+                                    placeholder="Search scenarios, IDs, modules..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <select className="tc-filter-select" value={filterModule} onChange={(e) => setFilterModule(e.target.value)}>
+                                <option value="">All Modules</option>
+                                {allModules.map(m => (<option key={m} value={m}>{m}</option>))}
+                            </select>
+                            <select className="tc-filter-select" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
                                 <option value="">All Types</option>
                                 <option value="positive">Positive</option>
                                 <option value="negative">Negative</option>
@@ -311,53 +308,39 @@ export default function GeneratedTestCases() {
                                 <option value="edge">Edge</option>
                                 <option value="security">Security</option>
                             </select>
+                            <select className="tc-filter-select" value={filterLevel} onChange={(e) => setFilterLevel(e.target.value)}>
+                                <option value="">All Levels</option>
+                                <option value="Unit">Unit</option>
+                                <option value="Integration">Integration</option>
+                                <option value="System">System</option>
+                                <option value="UAT">UAT</option>
+                            </select>
                         </div>
-                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-                            <button className="btn-outline" onClick={handleExportCSV} disabled={testCases.length === 0}>
-                                <FiDownload /> CSV
-                            </button>
-                            <button className="btn-outline" onClick={handleExportJSON} disabled={testCases.length === 0}>
-                                <FiDownload /> JSON
-                            </button>
-                            <input
-                                type="text"
-                                className="form-input"
-                                value={excelFileName}
-                                onChange={(e) => setExcelFileName(e.target.value)}
-                                style={{ width: "130px", marginBottom: 0 }}
-                                placeholder="File Name"
-                            />
-                            <button className="btn-gradient btn-excel" onClick={handleExportExcel} disabled={testCases.length === 0 || !excelFileName.trim()}>
-                                <FiFileText /> Excel
+
+                        {/* ── Export + Actions Row */}
+                        <div className="tc-actions-row">
+                            <div className="tc-export-group">
+                                <button className="tc-export-btn" onClick={handleExportCSV} disabled={testCases.length === 0}>
+                                    <FiDownload /> CSV
+                                </button>
+                                <button className="tc-export-btn" onClick={handleExportJSON} disabled={testCases.length === 0}>
+                                    {'{ }'} JSON
+                                </button>
+                                <button className="tc-export-btn excel" onClick={handleExportExcel} disabled={testCases.length === 0}>
+                                    <FiFileText /> EXCEL
+                                </button>
+                            </div>
+                            <div style={{ flex: 1 }} />
+                            {selectedIds.size > 0 && (
+                                <button className="btn-danger-outline" onClick={() => openModal("delete-selected")} style={{ fontSize: "0.78rem", padding: "0.3rem 0.65rem" }}>
+                                    <FiTrash2 /> Remove {selectedIds.size}
+                                </button>
+                            )}
+                            <button className="tc-clear-all-btn" onClick={() => openModal("clear-all")} disabled={testCases.length === 0}>
+                                <FiXCircle /> Clear Entire Test Case List
                             </button>
                         </div>
                     </div>
-
-                    {/* ── Bulk Actions Bar */}
-                    {testCases.length > 0 && (
-                        <div className="form-section animate-in" style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap", padding: "0.75rem 2rem", marginBottom: 0, marginTop: "0.5rem" }}>
-                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                                {selectedIds.size > 0 ? `${selectedIds.size} selected` : "No selection"}
-                            </span>
-                            <button
-                                className="btn-danger-outline"
-                                onClick={() => openModal("delete-selected")}
-                                disabled={selectedIds.size === 0}
-                            >
-                                <FiTrash2 /> Remove Selected
-                            </button>
-                            <div style={{ flex: 1 }} />
-                            <div className="form-group" style={{ marginBottom: 0, minWidth: "130px" }}>
-                                <button
-                                    className="btn-danger"
-                                    onClick={() => openModal("clear-all")}
-                                >
-                                    <FiXCircle /> Clear Entire Test Case List
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                    <hr style={{ margin: "0.5rem 0 0 0", opacity: 0.3 }} />
                 </div>
             )}
 
@@ -487,14 +470,24 @@ export default function GeneratedTestCases() {
                                             ({grouped[moduleName].length} cases)
                                         </span>
                                     </h3>
-                                    <button
-                                        className="btn-danger-outline"
-                                        style={{ fontSize: "0.8rem", padding: "0.35rem 0.75rem", flexShrink: 0, whiteSpace: "nowrap" }}
-                                        onClick={() => openModal("delete-module", moduleName)}
-                                        title={`Delete all ${moduleName} test cases`}
-                                    >
-                                        <FiTrash2 style={{ marginRight: 4 }} /> Delete Module
-                                    </button>
+                                    <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
+                                        <button
+                                            className="tc-export-btn excel"
+                                            style={{ fontSize: "0.8rem", padding: "0.35rem 0.75rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.35rem" }}
+                                            onClick={() => handleExportModuleExcel(moduleName)}
+                                            title={`Export ${moduleName} test cases to Excel`}
+                                        >
+                                            <FiFileText /> Export Excel
+                                        </button>
+                                        <button
+                                            className="btn-danger-outline"
+                                            style={{ fontSize: "0.8rem", padding: "0.35rem 0.75rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.35rem" }}
+                                            onClick={() => openModal("delete-module", moduleName)}
+                                            title={`Delete all ${moduleName} test cases`}
+                                        >
+                                            <FiTrash2 /> Delete Module
+                                        </button>
+                                    </div>
                                 </div>
                                 <div style={{ overflowX: "auto" }}>
                                     <table className="data-table">
