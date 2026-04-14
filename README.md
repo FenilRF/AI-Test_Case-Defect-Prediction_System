@@ -1,348 +1,258 @@
 # AI-Based Test Case Generation and Defect Prediction System
 
-> An AI-powered web application that automatically generates software test cases from textual requirements using NLP, predicts defect-prone modules using machine learning, and provides a risk-based prioritisation dashboard for QA teams.
+AI-powered QA platform that converts requirements and design inputs into structured test cases, runs risk analysis, and predicts defect risk using ML.
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-1.5-F7931E?logo=scikitlearn)
+## What This Project Does
 
----
+- Generates functional test cases from requirement text using NLP and rule-based logic.
+- Supports enterprise test generation and design-based generation from files, text, and URLs.
+- Runs multi-layer risk analysis on requirement and design context.
+- Predicts defect probability and risk class for modules.
+- Stores generated artifacts in timestamped folders and exports test cases to CSV, JSON, and Excel.
 
-## Table of Contents
+## Current Tech Stack
 
-- [Features](#features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Setup & Installation](#setup--installation)
-- [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
-- [ML Model Training](#ml-model-training)
-- [Testing](#testing)
-- [Sample Usage](#sample-usage)
+- Backend: FastAPI, SQLAlchemy, Pydantic, NLTK, scikit-learn
+- Design Intelligence: Groq API, Playwright, Pillow, BeautifulSoup, PyPDF2, python-docx, python-pptx
+- Frontend: React 19, Vite 7, Axios, Bootstrap 5, Chart.js
+- Database: SQLite by default (configurable via DATABASE_URL)
+- Testing: Pytest, HTTPX
 
----
+## Architecture Design
 
-## Features
+### High-Level Architecture
 
-### 1. NLP-Based Requirement Parsing
-- Text preprocessing (tokenisation, stopword removal, lemmatisation)
-- Automatic extraction of **actions**, **fields**, and **validations**
-- Module name detection from requirement context
-
-### 2. Automated Test Case Generation
-- **Positive** test cases — happy-path scenarios
-- **Negative** test cases — missing/invalid inputs
-- **Boundary** test cases — min/max limits
-- **Edge** test cases — unicode, concurrency, idempotency
-- **Security** test cases — SQL injection, XSS probes
-
-### 3. ML-Based Defect Prediction
-- Logistic Regression model trained on module-level metrics
-- Predicts defect probability (0–1) with risk classification
-- Risk levels: **High** (≥0.7), **Medium** (0.4–0.7), **Low** (<0.4)
-
-### 4. Risk-Based Prioritisation
-- High Risk → **P1** (Critical)
-- Medium Risk → **P2** (Major)
-- Low Risk → **P3** (Minor)
-
-### 5. Dashboard & Visualisation
-- Real-time stats (requirements, test cases, predictions)
-- Risk distribution doughnut chart
-- Defect probability bar chart
-- CSV & JSON export for test cases
-
----
-
-## Architecture
-
-```
-┌────────────────┐     HTTP/REST      ┌───────────────────┐
-│                │  ◄──────────────►  │                   │
-│  React + Vite  │                    │  FastAPI Backend   │
-│  (Frontend)    │                    │                   │
-│                │                    │  ┌─────────────┐  │
-└────────────────┘                    │  │ NLP Engine   │  │
-                                      │  │ Test Gen     │  │
-                                      │  │ ML Predictor │  │
-                                      │  └─────────────┘  │
-                                      │         │         │
-                                      │    ┌────▼────┐    │
-                                      │    │ SQLite  │    │
-                                      │    │   DB    │    │
-                                      │    └─────────┘    │
-                                      └───────────────────┘
+```text
+┌──────────────────────────────────────────────────────────────────────┐
+│                             Frontend (React)                        │
+│  Pages: Dashboard, Upload Requirement, Upload Design, Test Cases,   │
+│         Defect Prediction                                            │
+└───────────────────────────────┬──────────────────────────────────────┘
+                      │ HTTP/JSON
+                      ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                          FastAPI Backend                            │
+│                                                                      │
+│  API Layer                                                           │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ /api/requirements, /api/test-cases, /api/predict-defect,      │  │
+│  │ /api/design/upload, /api/dashboard/stats, exports             │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                              │                                       │
+│                              ▼                                       │
+│  Service Layer                                                       │
+│  ┌───────────────────────────┬────────────────────────────────────┐  │
+│  │ Requirement Pipeline      │ Design Intelligence Pipeline       │  │
+│  │ - chunker + NLP parser    │ - file/url ingestion              │  │
+│  │ - test generator          │ - crawl / vision / extraction     │  │
+│  │ - complexity + dedupe     │ - UI schema + flow detection      │  │
+│  │ - risk analysis           │ - enterprise LLM test generation  │  │
+│  │ - defect prediction       │ - coverage validation             │  │
+│  └───────────────────────────┴────────────────────────────────────┘  │
+│                              │                                       │
+│                              ▼                                       │
+│  Persistence + Artifacts                                              │
+│  - SQLite tables: requirements, test_cases, predictions, designs      │
+│  - Folder storage: backend/test_cases/<timestamped folders>           │
+│  - Exports: CSV / JSON / Excel                                        │
+└───────────────────────────────┬──────────────────────────────────────┘
+                      │
+                      ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                        External Services                             │
+│  Groq (LLM text + vision), Playwright crawling, file parsers         │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
----
+### Core Data Flows
 
-## Tech Stack
+1. Requirement Flow
+  User submits requirement text -> NLP parsing -> test generation -> scoring and deduplication -> risk analysis + defect prediction -> DB save + folder artifacts -> response to UI.
 
-| Layer       | Technology                                  |
-|-------------|---------------------------------------------|
-| Backend     | Python 3.11, FastAPI, SQLAlchemy, Pydantic   |
-| Database    | SQLite (swappable via DATABASE_URL)           |
-| ML          | scikit-learn, pandas, numpy, joblib           |
-| NLP         | NLTK                                         |
-| Frontend    | React 18, Vite, Axios, Chart.js, Bootstrap 5 |
-| Testing     | Pytest, httpx                                |
+2. Design Flow
+  User uploads file/image/URL/text -> extraction/crawling/vision analysis -> UI schema + flow detection -> enterprise test generation -> DB save + design folder artifacts -> response to UI.
 
----
+3. Reporting and Management Flow
+  UI requests grouped test cases, dashboard stats, and exports -> API queries DB -> response as JSON/CSV/Excel.
+
+### Architecture Notes
+
+- The backend is modular by layer: api, services, models, schemas, utils.
+- Storage is dual-mode: relational records in SQLite and audit artifacts in filesystem folders.
+- The design pipeline is fault-tolerant: if intelligence analysis fails, upload metadata is still persisted with graceful fallback.
 
 ## Project Structure
 
-```
-AI-TestCase-Defect-Prediction-System/
-│
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── requirements.py        # Requirement & test case endpoints
-│   │   │   └── defect_prediction.py   # Prediction & dashboard endpoints
-│   │   ├── models/
-│   │   │   ├── database.py            # SQLAlchemy engine & session
-│   │   │   └── models.py             # ORM models
-│   │   ├── schemas/
-│   │   │   └── schemas.py            # Pydantic request/response schemas
-│   │   ├── services/
-│   │   │   ├── nlp_service.py         # NLP requirement parser
-│   │   │   ├── test_case_generator.py # Test case generation engine
-│   │   │   └── defect_prediction_service.py  # ML prediction service
-│   │   ├── utils/
-│   │   │   ├── text_preprocessing.py  # NLTK text pipeline
-│   │   │   └── export.py             # CSV/JSON export helpers
-│   │   └── config.py                 # Pydantic settings
-│   ├── main.py                       # FastAPI app entry point
-│   ├── requirements.txt              # Python dependencies
-│   └── .env                          # Environment variables
-│
-├── ml_models/
-│   ├── training/
-│   │   └── train_model.py            # Model training script
-│   ├── saved_models/                 # Trained .pkl files
-│   └── feature_engineering.py        # Feature extraction utilities
-│
-├── frontend/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── HomePage.jsx          # Dashboard
-│   │   │   ├── UploadRequirement.jsx # Requirement input + generation
-│   │   │   ├── GeneratedTestCases.jsx # Test case listing + export
-│   │   │   └── DefectPrediction.jsx  # Prediction form + charts
-│   │   ├── services/
-│   │   │   └── api.js                # Axios API layer
-│   │   ├── App.jsx                   # Router + sidebar nav
-│   │   ├── App.css                   # Global styles
-│   │   └── main.jsx                  # React entry point
-│   └── package.json
-│
-├── datasets/
-│   ├── defect_data.csv               # Synthetic training data (50 modules)
-│   └── sample_requirements.json      # Sample requirement texts
-│
-├── tests/
-│   ├── conftest.py                   # Pytest fixtures
-│   ├── test_nlp_service.py           # NLP unit tests
-│   ├── test_case_generator.py        # Generator unit tests
-│   ├── test_defect_predictor.py      # Predictor unit tests
-│   └── test_api.py                   # API integration tests
-│
-├── docs/
-│   ├── api_documentation.md          # API reference
-│   └── postman_collection.json       # Postman import file
-│
-└── README.md
-```
+  AI-TestCase-Defect-Prediction-System/
+  |- AI-Test-Generator.md
+  |- README.md
+  |- backend/
+  |  |- main.py
+  |  |- requirements.txt
+  |  |- app/
+  |  |  |- api/
+  |  |  |  |- requirements.py
+  |  |  |  |- defect_prediction.py
+  |  |  |  |- design_upload.py
+  |  |  |- models/
+  |  |  |- schemas/
+  |  |  |- services/
+  |  |  |- utils/
+  |  |- test_cases/
+  |- frontend/
+  |  |- src/
+  |  |- package.json
+  |- ml_models/
+  |  |- training/
+  |  |- saved_models/
+  |- datasets/
+  |  |- defect_data.csv
+  |  |- sample_requirements.json
+  |- docs/
+  |  |- api_documentation.md
+  |  |- postman_collection.json
+  |  |- CEO_Project_Documentation.md
+  |- tests/
 
----
-
-## Setup & Installation
+## Setup
 
 ### Prerequisites
 
-- **Python 3.11+**
-- **Node.js 18+** and npm
-- **Git**
+- Python 3.11+
+- Node.js 18+
+- npm
 
-### 1. Clone the Repository
+### 1) Backend setup
 
-```bash
-git clone <repository-url>
-cd AI-TestCase-Defect-Prediction-System
-```
+  cd backend
+  python -m venv venv
 
-### 2. Backend Setup
+Windows:
 
-```bash
-# Create virtual environment
-cd backend
-python -m venv venv
+  venv\Scripts\activate
 
-# Activate venv
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
+macOS/Linux:
 
-# Install dependencies
-pip install -r requirements.txt
-```
+  source venv/bin/activate
 
-### 3. Train the ML Model (Optional but Recommended)
+Install dependencies:
 
-```bash
-cd ..
-python -m ml_models.training.train_model
-```
+  pip install -r requirements.txt
 
-This creates `defect_model.pkl` and `scaler.pkl` in `ml_models/saved_models/`.  
-If skipped, the system uses a heuristic fallback for predictions.
+Optional but recommended for design crawling and screenshots:
 
-### 4. Frontend Setup
+  python -m playwright install
 
-```bash
-cd frontend
-npm install
-```
+### 2) Frontend setup
 
----
+  cd frontend
+  npm install
 
-## Running the Application
+## Run the Application
 
-### Start Backend (Terminal 1)
+### Terminal 1: Backend
 
-```bash
-cd backend
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
+  cd backend
+  uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-The API is now available at **http://localhost:8000**  
-Interactive docs: **http://localhost:8000/docs**
+### Terminal 2: Frontend
 
-### Start Frontend (Terminal 2)
+  cd frontend
+  npm run dev
 
-```bash
-cd frontend
-npm run dev
-```
+App URLs:
 
-The UI is now available at **http://localhost:5173**
+- Backend API: http://localhost:8000
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+- Frontend: http://localhost:5173
 
----
+## Main API Endpoints
 
-## API Documentation
+### Health
 
-FastAPI auto-generates interactive documentation:
+- GET / 
+- GET /health
 
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+### Requirements and Test Cases
 
-### Key Endpoints
+- POST /api/requirements
+- GET /api/requirements
+- GET /api/requirements/{req_id}
+- POST /api/generate-testcases
+- POST /api/generate-enterprise
+- GET /api/test-cases
+- GET /api/test-cases/grouped
+- DELETE /api/test-cases/{test_id}
+- POST /api/test-cases/delete-selected
+- DELETE /api/test-cases/clear/{req_id}
+- DELETE /api/test-cases/clear-all
+- DELETE /api/test-cases/clear-module/{module_name}
+- GET /api/test-cases/export/csv
+- GET /api/test-cases/export/json
+- POST /api/test-cases/export/excel
+- POST /api/test-cases/save-excel/{req_id}
+- POST /api/risk-analysis
 
-| Method | Endpoint                     | Description                          |
-|--------|------------------------------|--------------------------------------|
-| GET    | `/`                          | Health check                         |
-| POST   | `/api/requirements`          | Store a requirement                  |
-| GET    | `/api/requirements`          | List all requirements                |
-| POST   | `/api/generate-testcases`    | Parse requirement + generate cases   |
-| GET    | `/api/test-cases`            | List generated test cases            |
-| GET    | `/api/test-cases/export/csv` | Export test cases as CSV             |
-| GET    | `/api/test-cases/export/json`| Export test cases as JSON            |
-| POST   | `/api/predict-defect`        | Predict defect probability           |
-| GET    | `/api/predictions`           | List prediction history              |
-| GET    | `/api/dashboard/stats`       | Get dashboard statistics             |
-| POST   | `/api/model/reload`          | Reload ML model after retraining     |
+### Defect Prediction
 
----
+- POST /api/predict-defect
+- GET /api/predictions
+- POST /api/defect-data
+- GET /api/defect-data
+- GET /api/dashboard/stats
+- POST /api/model/reload
+
+### Design Upload and Intelligence
+
+- POST /api/design/upload
+- GET /api/design/{design_id}
+- GET /api/design/by-requirement/{req_id}
 
 ## ML Model Training
 
-The training script (`ml_models/training/train_model.py`) follows this pipeline:
+From project root:
 
-1. **Load Data** — reads `datasets/defect_data.csv`
-2. **Split** — 80% train / 20% test (stratified)
-3. **Scale** — StandardScaler normalisation
-4. **Train** — Logistic Regression with `class_weight='balanced'`
-5. **Evaluate** — accuracy, precision, recall, F1, AUC-ROC
-6. **Save** — `defect_model.pkl` + `scaler.pkl`
+  python -m ml_models.training.train_model
 
-### Features Used
+Expected output files:
 
-| Feature          | Description                    |
-|------------------|--------------------------------|
-| lines_of_code    | Total lines in the module      |
-| complexity_score | Cyclomatic complexity metric   |
-| past_defects     | Historical defect count        |
-| code_churn       | Lines changed recently         |
+- ml_models/saved_models/defect_model.pkl
+- ml_models/saved_models/scaler.pkl
 
-### Risk Classification
+If model files are missing, defect prediction falls back to heuristic scoring.
 
-| Probability   | Risk Level | QA Priority |
-|---------------|------------|-------------|
-| 0.7 – 1.0    | High       | P1          |
-| 0.4 – 0.7    | Medium     | P2          |
-| 0.0 – 0.4    | Low        | P3          |
+## Running Tests
 
----
+From backend folder:
 
-## Testing
+  python -m pytest ../tests/ -v --tb=short
 
-Run all tests:
+Run specific suites:
 
-```bash
-# From project root
-cd backend
-python -m pytest ../tests/ -v --tb=short
-```
-
-Run specific test files:
-
-```bash
-python -m pytest ../tests/test_nlp_service.py -v
-python -m pytest ../tests/test_case_generator.py -v
-python -m pytest ../tests/test_defect_predictor.py -v
-python -m pytest ../tests/test_api.py -v
-```
-
----
-
-## Sample Usage
-
-### Generate Test Cases
-
-```bash
-curl -X POST http://localhost:8000/api/generate-testcases \
-  -H "Content-Type: application/json" \
-  -d '{"requirement_text": "The system shall allow users to login using email and password. Email must be valid format and password is required."}'
-```
-
-### Predict Defects
-
-```bash
-curl -X POST http://localhost:8000/api/predict-defect \
-  -H "Content-Type: application/json" \
-  -d '{"module_name": "Payment", "lines_of_code": 4200, "complexity_score": 42.0, "past_defects": 18, "code_churn": 250}'
-```
-
----
+  python -m pytest ../tests/test_nlp_service.py -v
+  python -m pytest ../tests/test_case_generator.py -v
+  python -m pytest ../tests/test_defect_predictor.py -v
+  python -m pytest ../tests/test_api.py -v
 
 ## Environment Variables
 
-| Variable        | Default                  | Description              |
-|-----------------|--------------------------|--------------------------|
-| DATABASE_URL    | sqlite:///./app_database.db | Database connection URL |
-| DEBUG           | True                     | Enable debug logging     |
-| LOG_LEVEL       | INFO                     | Logging level            |
-| CORS_ORIGINS    | ["http://localhost:5173"] | Allowed CORS origins     |
+Set these in backend/.env if needed:
 
----
+- DATABASE_URL (default: sqlite:///./app_database.db)
+- DEBUG (default: True)
+- LOG_LEVEL (default: INFO)
+- CORS_ORIGINS (default includes localhost:5173 and localhost:3000)
+- GROQ_API_KEY
+- GROQ_TEXT_MODEL
+- GROQ_VISION_MODEL
+
+## Notes
+
+- Generated requirement and design artifacts are stored under backend/test_cases.
+- datasets folder is intentionally kept for model training and sample data.
+- frontend/node_modules is environment-specific and can be reinstalled with npm install.
 
 ## License
 
-This project is built for educational and demonstration purposes.
-
----
-
-*Built with ❤️ using FastAPI, React, scikit-learn, and NLTK*
+Internal project for development, demonstration, and evaluation.
