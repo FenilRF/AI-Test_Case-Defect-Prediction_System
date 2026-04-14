@@ -6,8 +6,8 @@
  * Delete Selected, Clear All, and confirmation modals.
  */
 
-import { useState, useEffect, useRef } from "react";
-import { FiDownload, FiFilter, FiList, FiSearch, FiFileText, FiTrash2, FiXCircle, FiAlertTriangle, FiLayers } from "react-icons/fi";
+import React, { useState, useEffect, useRef } from "react";
+import { FiDownload, FiFilter, FiList, FiSearch, FiFileText, FiTrash2, FiXCircle, FiAlertTriangle, FiLayers, FiChevronDown, FiChevronRight } from "react-icons/fi";
 import {
     getTestCases,
     exportTestCasesCSV,
@@ -27,6 +27,7 @@ export default function GeneratedTestCases() {
     const [filterModule, setFilterModule] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedIds, setSelectedIds] = useState(new Set());
+    const [expandedRows, setExpandedRows] = useState(new Set());
 
     // Modal state
     const [modal, setModal] = useState({ show: false, type: "", data: null });
@@ -56,7 +57,7 @@ export default function GeneratedTestCases() {
     const fetchTestCases = async () => {
         setLoading(true);
         try {
-            const params = {};
+            const params = { limit: 10000 };
             if (filterType) params.test_type = filterType;
             const res = await getTestCases(params);
             setTestCases(res.data);
@@ -70,6 +71,15 @@ export default function GeneratedTestCases() {
     // ── Selection Handlers ────────────────────────────────
     const toggleSelect = (id) => {
         setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleExpand = (id) => {
+        setExpandedRows((prev) => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
             else next.add(id);
@@ -521,46 +531,84 @@ export default function GeneratedTestCases() {
                                         </thead>
                                         <tbody>
                                             {grouped[moduleName].map((tc, idx) => (
-                                                <tr key={tc.test_id} className={selectedIds.has(tc.test_id) ? "row-selected" : ""}>
-                                                    <td>
-                                                        <input
-                                                            type="checkbox"
-                                                            className="tc-checkbox"
-                                                            checked={selectedIds.has(tc.test_id)}
-                                                            onChange={() => toggleSelect(tc.test_id)}
-                                                        />
-                                                    </td>
-                                                    <td>{idx + 1}</td>
-                                                    <td>{tc.scenario}</td>
-                                                    <td>
-                                                        <span className={`badge badge-${tc.test_type}`}>
-                                                            {tc.test_type}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <span className={`badge badge-level-${(tc.test_level || "unit").toLowerCase()}`}>
-                                                            {tc.test_level || "Unit"}
-                                                        </span>
-                                                    </td>
-                                                    <td>{tc.expected_result}</td>
-                                                    <td>
-                                                        <span className={`badge badge-${tc.priority.toLowerCase()}`}>
-                                                            {tc.priority}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ fontSize: "0.8rem", whiteSpace: "nowrap", opacity: 0.8 }}>
-                                                        {formatDate(tc.created_at)}
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            className="btn-icon-danger"
-                                                            onClick={() => openModal("delete-single", tc.test_id)}
-                                                            title="Delete test case"
+                                                <React.Fragment key={tc.test_id}>
+                                                    <tr className={selectedIds.has(tc.test_id) ? "row-selected" : ""}>
+                                                        <td>
+                                                            <input
+                                                                type="checkbox"
+                                                                className="tc-checkbox"
+                                                                checked={selectedIds.has(tc.test_id)}
+                                                                onChange={() => toggleSelect(tc.test_id)}
+                                                            />
+                                                        </td>
+                                                        <td>{idx + 1}</td>
+                                                        <td
+                                                            onClick={() => toggleExpand(tc.test_id)}
+                                                            style={{ cursor: "pointer" }}
                                                         >
-                                                            <FiTrash2 />
-                                                        </button>
-                                                    </td>
-                                                </tr>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                                {expandedRows.has(tc.test_id) ? <FiChevronDown /> : <FiChevronRight />}
+                                                                <span>{tc.scenario}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <span className={`badge badge-${tc.test_type}`}>
+                                                                {tc.test_type}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span className={`badge badge-level-${(tc.test_level || "unit").toLowerCase()}`}>
+                                                                {tc.test_level || "Unit"}
+                                                            </span>
+                                                        </td>
+                                                        <td>{tc.expected_result}</td>
+                                                        <td>
+                                                            <span className={`badge badge-${tc.priority.toLowerCase()}`}>
+                                                                {tc.priority}
+                                                            </span>
+                                                        </td>
+                                                        <td style={{ fontSize: "0.8rem", whiteSpace: "nowrap", opacity: 0.8 }}>
+                                                            {formatDate(tc.created_at)}
+                                                        </td>
+                                                        <td>
+                                                            <button
+                                                                className="btn-icon-danger"
+                                                                onClick={() => openModal("delete-single", tc.test_id)}
+                                                                title="Delete test case"
+                                                            >
+                                                                <FiTrash2 />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                    {expandedRows.has(tc.test_id) && (
+                                                        <tr className="expanded-details-row">
+                                                            <td colSpan="9" style={{ backgroundColor: "#f8fafc", padding: "1rem" }}>
+                                                                <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingLeft: "40px" }}>
+                                                                    {tc.precondition && (
+                                                                        <div>
+                                                                            <strong>Precondition:</strong> {tc.precondition}
+                                                                        </div>
+                                                                    )}
+                                                                    {tc.test_steps && tc.test_steps.length > 0 && (
+                                                                        <div>
+                                                                            <strong>Test Steps:</strong>
+                                                                            <ol style={{ margin: "5px 0 0 20px", padding: 0 }}>
+                                                                                {tc.test_steps.map((step, sIdx) => (
+                                                                                    <li key={sIdx}>{step}</li>
+                                                                                ))}
+                                                                            </ol>
+                                                                        </div>
+                                                                    )}
+                                                                    {(!tc.precondition && (!tc.test_steps || tc.test_steps.length === 0)) && (
+                                                                        <div style={{ fontStyle: "italic", color: "#64748b" }}>
+                                                                            No additional details available.
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
                                             ))}
                                         </tbody>
                                     </table>

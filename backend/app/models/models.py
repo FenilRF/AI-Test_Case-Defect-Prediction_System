@@ -55,6 +55,8 @@ class TestCase(Base):
     test_type = Column(String(100), nullable=False)  # positive / negative / boundary / edge / security
     test_level = Column(String(50), nullable=True, default="Unit")  # Unit / Integration / System / UAT
     expected_result = Column(Text, nullable=False)
+    precondition = Column(Text, nullable=True, default="")
+    test_steps = Column(Text, nullable=True, default="")  # Stored as JSON string
     priority = Column(String(10), nullable=False, default="P3")  # P1 / P2 / P3
     created_at = Column(DateTime, server_default=func.now())  # auto-set on insert
     complexity_score = Column(Integer, nullable=True, default=1)  # 1–5

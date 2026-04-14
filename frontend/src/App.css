@@ -3929,9 +3929,11 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  background: transparent;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
+  display: inline-flex;
   padding: 0.4rem 0.85rem;
   color: var(--text-secondary);
   font-size: 0.78rem;
@@ -3960,6 +3962,7 @@ body {
 
 .tc-export-btn.excel:hover:not(:disabled) {
   background: rgba(33, 115, 70, 0.2);
+  color: #22c55e;
   border-color: #22c55e;
 }
 

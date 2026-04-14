@@ -150,9 +150,9 @@ export default function HomePage() {
                     <p>High-level insights for your QA test generation pipeline.</p>
                 </div>
                 <div className="header-actions">
-                    <button className="btn-outline" style={{ gap: "0.4rem" }}>
+                    <Link to="/test-cases" className="btn-outline" style={{ textDecoration: "none", gap: "0.4rem" }}>
                         <FiDownload /> Export Report
-                    </button>
+                    </Link>
                     <Link to="/upload" className="btn-gradient" style={{ textDecoration: "none", gap: "0.4rem" }}>
                         <FiPlus /> New Analysis
                     </Link>

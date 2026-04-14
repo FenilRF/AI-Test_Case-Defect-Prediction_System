@@ -233,11 +233,12 @@ export default function UploadDesign() {
                         className="form-input"
                         value={requirementId}
                         onChange={(e) => setRequirementId(e.target.value)}
+                        style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}
                     >
                         <option value="">— None (standalone upload) —</option>
                         {requirements.map((r) => (
                             <option key={r.id} value={r.id}>
-                                #{r.id} — {r.text.substring(0, 80)}{r.text.length > 80 ? "…" : ""}
+                                #{r.id} — {r.text.substring(0, 50)}{r.text.length > 50 ? "…" : ""}
                             </option>
                         ))}
                     </select>

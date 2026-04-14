@@ -137,6 +137,8 @@ def generate_testcases(payload: TestCaseGenerationRequest, db: Session = Depends
             test_type=rc["test_type"],
             test_level=rc.get("test_level", "Unit"),
             expected_result=rc["expected_result"],
+            precondition=rc.get("precondition", ""),
+            test_steps=__import__("json").dumps(rc.get("test_steps", [])),
             priority=rc["priority"],
             complexity_score=rc.get("complexity_score", 1),
             duplicate_score=rc.get("duplicate_score", 0.0),
@@ -224,6 +226,8 @@ def generate_testcases(payload: TestCaseGenerationRequest, db: Session = Depends
             test_type=tc.test_type,
             test_level=tc.test_level or "Unit",
             expected_result=tc.expected_result,
+            precondition=tc.precondition or "",
+            test_steps=__import__("json").loads(tc.test_steps) if tc.test_steps else [],
             priority=tc.priority,
         )
         for tc in db_cases
@@ -245,7 +249,7 @@ def list_test_cases(
     requirement_id: Optional[int] = None,
     test_type: Optional[str] = None,
     skip: int = Query(0, ge=0),
-    limit: int = Query(500, ge=1, le=5000),
+    limit: int = Query(5000, ge=1, le=10000),
     db: Session = Depends(get_db),
 ):
     """List test cases with optional filters."""
@@ -263,6 +267,8 @@ def list_test_cases(
             test_type=tc.test_type,
             test_level=tc.test_level or "Unit",
             expected_result=tc.expected_result,
+            precondition=tc.precondition or "",
+            test_steps=__import__("json").loads(tc.test_steps) if tc.test_steps else [],
             priority=tc.priority,
             created_at=tc.created_at,
             complexity_score=tc.complexity_score or 1,
@@ -286,6 +292,8 @@ def list_test_cases_grouped(db: Session = Depends(get_db)):
             test_type=tc.test_type,
             test_level=tc.test_level or "Unit",
             expected_result=tc.expected_result,
+            precondition=tc.precondition or "",
+            test_steps=__import__("json").loads(tc.test_steps) if tc.test_steps else [],
             priority=tc.priority,
             created_at=tc.created_at,
             complexity_score=tc.complexity_score or 1,
@@ -622,8 +630,10 @@ def generate_enterprise(payload: TestCaseGenerationRequest, db: Session = Depend
             scenario=tc["scenario"],
             test_type=tc["test_type"],
             test_level=tc.get("test_level", "Unit"),
-            expected_result=tc["expected_result"],
-            priority=tc["priority"],
+            expected_result=tc.get("expected_result", ""),
+            precondition=tc.get("precondition", ""),
+            test_steps=__import__("json").dumps(tc.get("test_steps", [])),
+            priority=tc.get("priority", "P3"),
         )
         db.add(db_tc)
         db_cases.append(db_tc)
@@ -703,6 +713,8 @@ def generate_enterprise(payload: TestCaseGenerationRequest, db: Session = Depend
             "test_type": tc.test_type,
             "test_level": tc.test_level or "Unit",
             "expected_result": tc.expected_result,
+            "precondition": tc.precondition or "",
+            "test_steps": __import__("json").loads(tc.test_steps) if tc.test_steps else [],
             "priority": tc.priority,
         }
         for tc in db_cases

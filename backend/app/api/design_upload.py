@@ -18,7 +18,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.models.database import get_db
-from app.models.models import DesignDocument, Requirement
+from app.models.models import DesignDocument, Requirement, TestCase
 from app.schemas.schemas import (
     EnterpriseDesignUploadResponse,
     DesignDocumentOut,
@@ -190,6 +190,51 @@ async def upload_design(
             logger.info("Saved %d enterprise test cases to %s", len(test_cases), tc_file_path)
         except Exception as e:
             logger.warning("Could not save test cases JSON: %s", e)
+
+    # ── Persist test cases to database ────────────────────
+    if test_cases:
+        # Ensure a requirement exists to link test cases to
+        linked_req_id = requirement_id
+        if not linked_req_id:
+            # Create a placeholder requirement for design-only uploads
+            design_label = ", ".join(saved_file_names) or ", ".join(design_urls) or "Design text input"
+            placeholder_req = Requirement(
+                text=f"[Design Upload] {design_label}",
+                design_text=design_text or "",
+            )
+            db.add(placeholder_req)
+            db.commit()
+            db.refresh(placeholder_req)
+            linked_req_id = placeholder_req.id
+            # Update requirement_id so the response also reflects it
+            requirement_id = linked_req_id
+            logger.info("Created placeholder requirement id=%d for design upload", linked_req_id)
+
+        for tc_dict in test_cases:
+            steps = tc_dict.get("test_steps", tc_dict.get("steps", []))
+            if isinstance(steps, list):
+                steps = json.dumps(steps)
+            tc = TestCase(
+                requirement_id=linked_req_id,
+                module_name=tc_dict.get("module", tc_dict.get("module_name", "Design Module")),
+                scenario=tc_dict.get("scenario", tc_dict.get("description", "")),
+                test_type=tc_dict.get("type", tc_dict.get("test_type", "functional")),
+                test_level=tc_dict.get("level", tc_dict.get("test_level", "System")),
+                expected_result=tc_dict.get("expected_result", tc_dict.get("expected", "")),
+                precondition=tc_dict.get("precondition", ""),
+                test_steps=steps,
+                priority=tc_dict.get("priority", "P3"),
+                complexity_score=tc_dict.get("complexity_score", 2),
+                duplicate_score=0.0,
+                coverage_tag=tc_dict.get("coverage_tag", "design"),
+            )
+            db.add(tc)
+        try:
+            db.commit()
+            logger.info("Persisted %d design test cases to database (req_id=%d)", len(test_cases), linked_req_id)
+        except Exception as e:
+            logger.error("Failed to persist design test cases to DB: %s", e)
+            db.rollback()
 
     # ── Build legacy analysis for backward compat ─────────
     legacy_analysis = {

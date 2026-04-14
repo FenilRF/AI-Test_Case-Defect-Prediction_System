@@ -55,6 +55,8 @@ class TestCaseOut(BaseModel):
     test_type: str
     test_level: str = "Unit"  # Unit / Integration / System / UAT
     expected_result: str
+    precondition: str = ""
+    test_steps: List[str] = []
     priority: str
     created_at: Optional[datetime] = None
     complexity_score: int = 1
@@ -384,6 +386,8 @@ class EnterpriseTestCaseOut(BaseModel):
     test_type: str
     test_level: str = "Unit"
     expected_result: str
+    precondition: str = ""
+    test_steps: List[str] = []
     priority: str
     created_at: Optional[datetime] = None
     complexity_score: int = 1
